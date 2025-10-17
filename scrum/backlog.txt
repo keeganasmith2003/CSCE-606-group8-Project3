@@ -1,0 +1,46 @@
+AS AN END USER
+
+As a user, I can create a new support ticket with a title and description so I can request help. (3)
+
+As a user, I can choose a ticket type from a dropdown so my request is routed appropriately. (2)
+
+As a user, I can attach one or more files to my ticket so I can provide context. (5)
+
+As a user, I can add optional priority (e.g., Low/Medium/High) so staff can triage my ticket. (2)
+
+As a user, I can see a confirmation with my ticket ID after submission so I know it was received. (1)
+
+As a user, I can view a list of my submitted tickets so I can track status. (3)
+
+As a user, I can open a ticket to see its details (status, assignee, comments, history). (3)
+
+As a user, I can comment on my open ticket to add updates or answer staff questions. (3)
+
+As a user, I can edit my ticket’s description before it is picked up by staff in case I need to clarify. (5)
+
+As a user, I can close my own ticket if I no longer need help. (2)
+
+AS STAFF (APPROVER / AGENT)
+11) As staff, I can see a dashboard of tickets pending my approval so I can process requests. (5)
+12) As staff, I can filter pending tickets by ticket type, priority, and submitter so I can find items quickly. (5)
+13) As staff, I can sort pending tickets by created date and priority to prioritize work. (3)
+14) As staff, I can open a ticket and see full details (submitter, type, priority, attachments, comments). (3)
+15) As staff, I can approve a ticket so it moves to “Approved” status. (2)
+16) As staff, I can reject a ticket with a required reason so the user understands why. (3)
+17) As staff, I can assign an approved ticket to a team or specific agent so work can begin. (5)
+18) As staff, I can change a ticket’s status (e.g., In Progress, On Hold, Resolved) to reflect progress. (3)
+19) As staff, I can add internal comments (visible to staff only) and public comments (visible to user) to collaborate. (5)
+20) As staff, I can upload attachments to the ticket to share drafts or evidence. (3)
+21) As staff, I can reassign a ticket to a different team if misrouted. (3)
+22) As staff, I can bulk-approve or bulk-reassign selected tickets to speed up processing. (8)
+
+AS A SYSADMIN (CONFIGURATION)
+23) As a sysadmin, I can create ticket types with a name and description so the catalog reflects our processes. (3)
+24) As a sysadmin, I can define required fields per ticket type (e.g., “System Name”, “Requested Date”) so submissions collect needed info. (8)
+25) As a sysadmin, I can set default priority rules per ticket type so initial triage is consistent. (5)
+26) As a sysadmin, I can map each ticket type to one or more teams responsible for approval/fulfillment. (5)
+27) As a sysadmin, I can set approval flow per ticket type (e.g., “Manager approval required”) so governance is enforced. (8)
+28) As a sysadmin, I can enable/disable ticket types so the catalog stays current. (2)
+29) As a sysadmin, I can create and manage teams (name, description, members) so tickets can be routed. (5)
+30) As a sysadmin, I can configure status values and basic workflow transitions so the lifecycle matches our process. (8)
+31) As a sysadmin, I can define visibility of fields (user-visible vs staff-only) to control who sees what. (5)
