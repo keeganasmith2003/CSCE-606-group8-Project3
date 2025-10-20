@@ -1,0 +1,41 @@
+<h1>User #<%= @user.id %></h1>
+
+<dl class="details">
+  <dt>Email</dt>
+  <dd><%= mail_to @user.email %></dd>
+
+  <dt>Name</dt>
+  <dd><%= @user.name.presence || "—" %></dd>
+
+  <dt>Role</dt>
+  <dd><%= @user.role %></dd>
+
+  <dt>Provider</dt>
+  <dd><%= @user.provider %></dd>
+
+  <dt>UID</dt>
+  <dd><%= @user.uid %></dd>
+
+  <dt>Image</dt>
+  <dd>
+    <% if @user.image_url.present? %>
+      <img src="<%= @user.image_url %>" alt="User image" style="max-height:80px">
+    <% else %>
+      —
+    <% end %>
+  </dd>
+
+  <dt>Access Token Expires At</dt>
+  <dd><%= @user.access_token_expires_at&.to_s(:long) || "—" %></dd>
+
+  <dt>Created</dt>
+  <dd><%= l @user.created_at, format: :long %></dd>
+
+  <dt>Updated</dt>
+  <dd><%= l @user.updated_at, format: :long %></dd>
+</dl>
+
+<p class="actions">
+  <%= link_to "Edit", edit_user_path(@user), class: "btn" %>
+  <%= link_to "Back", users_path, class: "btn" %>
+</p>

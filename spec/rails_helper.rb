@@ -69,4 +69,20 @@ RSpec.configure do |config|
   config.filter_rails_from_backtrace!
   # arbitrary gems may also be filtered via:
   # config.filter_gems_from_backtrace("gem name")
+  Dir[Rails.root.join("spec/support/**/*.rb")].sort.each { |f| require f }
+
+end
+RSpec.configure do |config|
+  # Use `build(:user)` / `create(:user)` etc.
+  config.include FactoryBot::Syntax::Methods
+end
+
+# Shoulda Matchers config
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+    with.library :active_model
+    with.library :active_record
+  end
 end

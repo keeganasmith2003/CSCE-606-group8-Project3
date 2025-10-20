@@ -11,4 +11,27 @@ class ApplicationController < ActionController::Base
   def authenticate_user!
     redirect_to login_path, alert: "Please sign in." unless current_user
   end
+
+  def sysadmin?
+    current_user&.sysadmin?
+  end
+
+  def require_sysadmin
+    return if sysadmin?
+    # You can also `head :forbidden` for APIs; redirect is nicer for HTML.
+    redirect_to root_path, alert: "Not authorized."
+  end
+
+  def require_login
+    return if current_user
+
+    # For HTML, remember where they were going (GET only) and redirect to login
+    if request.format.html?
+      session[:return_to] = request.get? ? request.fullpath : root_path
+      redirect_to login_path, alert: "Please sign in."
+    else
+      # For JSON/API
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    end
+  end
 end

@@ -1,5 +1,7 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [ :show, :edit, :update, :destroy ]
+  before_action :require_login
+  before_action :require_sysadmin
+  before_action :set_user, only: [:show, :edit, :update, :destroy]
 
   def index
     @users = User.order(:id)
@@ -41,12 +43,13 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  # If you only want admins to set `role`, gate it here or split params by current_user role.
+  # Only sysadmins may set role; everyone else (not that they can reach here) gets role filtered out.
   def user_params
-    params.require(:user).permit(
+    permitted = [
       :provider, :uid, :email, :name, :image_url,
-      :access_token, :refresh_token, :access_token_expires_at,
-      :role
-    )
+      :access_token, :refresh_token, :access_token_expires_at
+    ]
+    permitted << :role if sysadmin?
+    params.require(:user).permit(permitted)
   end
 end

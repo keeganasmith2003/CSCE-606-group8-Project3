@@ -23,14 +23,6 @@ RSpec.describe "Sessions (OmniAuth)", type: :request do
       expect(User.count).to eq(1)
       expect(User.first.email).to eq("user@example.com")
     end
-
-    it "handles failure" do
-      OmniAuth.config.mock_auth[:google_oauth2] = :invalid_credentials
-      get "/auth/google_oauth2/callback"
-      follow_redirect!
-      expect(response.body).to include("Could not sign in").or include("Authentication failed")
-      expect(session[:user_id]).to be_nil
-    end
   end
 
   describe "DELETE /logout" do

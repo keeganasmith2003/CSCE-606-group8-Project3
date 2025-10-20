@@ -1,0 +1,73 @@
+<%= form_with(model: user) do |f| %>
+    <% if user.errors.any? %>
+      <div class="errors">
+        <h2><%= pluralize(user.errors.count, "error") %> prohibited this user from being saved:</h2>
+        <ul>
+          <% user.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  
+    <fieldset>
+      <legend>Identity</legend>
+      <div class="field">
+        <%= f.label :email %><br>
+        <%= f.email_field :email, required: true, autofocus: true %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :name %><br>
+        <%= f.text_field :name %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :role %><br>
+        <%= f.select :role, options_for_select(User.roles.keys.map { |r| [r.titleize, r] }, user.role) %>
+      </div>
+    </fieldset>
+  
+    <fieldset>
+      <legend>OAuth</legend>
+      <div class="field">
+        <%= f.label :provider %><br>
+        <%= f.text_field :provider, placeholder: "google_oauth2" %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :uid %><br>
+        <%= f.text_field :uid %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :image_url %><br>
+        <%= f.url_field :image_url %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :access_token %><br>
+        <%= f.text_field :access_token %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :refresh_token %><br>
+        <%= f.text_field :refresh_token %>
+      </div>
+  
+      <div class="field">
+        <%= f.label :access_token_expires_at %><br>
+        <%= f.datetime_field :access_token_expires_at %>
+      </div>
+    </fieldset>
+  
+    <div class="actions">
+      <%= f.submit %>
+      <% if user.persisted? %>
+        <%= link_to "Cancel", user_path(user) %>
+      <% else %>
+        <%= link_to "Cancel", users_path %>
+      <% end %>
+    </div>
+  <% end %>
+  

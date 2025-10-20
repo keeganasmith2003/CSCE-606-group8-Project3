@@ -1,0 +1,39 @@
+<h1>Users</h1>
+
+<p>
+  <%= link_to "New User", new_user_path, class: "btn" %>
+</p>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Email</th>
+      <th>Name</th>
+      <th>Provider</th>
+      <th>UID</th>
+      <th>Role</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @users.each do |user| %>
+      <tr id="<%= dom_id(user) %>">
+        <td><%= user.id %></td>
+        <td><%= mail_to user.email %></td>
+        <td><%= user.name %></td>
+        <td><%= user.provider %></td>
+        <td><%= user.uid %></td>
+        <td><%= user.role %></td>
+        <td class="actions">
+          <%= link_to "Show", user_path(user) %> |
+          <%= link_to "Edit", edit_user_path(user) %> |
+          <%= button_to "Delete", user_path(user), method: :delete, data: { confirm: "Delete this user?" } %>
+          <!-- If you prefer a link with Turbo:
+          <%= link_to "Delete", user_path(user), data: { turbo_method: :delete, turbo_confirm: "Delete this user?" } %>
+          -->
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

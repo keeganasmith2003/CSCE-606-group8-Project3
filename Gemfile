@@ -70,7 +70,6 @@ group :test do
   gem "database_cleaner-active_record"   # keeps test DB clean between scenarios (optional)
   gem "launchy"
   gem "simplecov", require: false
-  gem "factory_bot_rails"
 end
 
 gem "omniauth"
