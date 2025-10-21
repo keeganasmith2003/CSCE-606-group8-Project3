@@ -1,0 +1,39 @@
+<%= form_with(model: @ticket) do |form| %>
+  <% if @ticket.errors.any? %>
+    <div>
+      <% @ticket.errors.full_messages.each do |message| %>
+        <div><%= message %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :subject %>
+    <%= form.text_field :subject %>
+  </div>
+
+  <div>
+    <%= form.label :description %>
+    <%= form.text_area :description %>
+  </div>
+
+    <div>
+    <%= form.label :status %>
+    <%= form.select :status, Ticket.statuses.keys.map { |s| [s.titleize, s] } %>
+    </div>
+
+
+  <div>
+    <%= form.label :priority %>
+    <%= form.select :priority, Ticket.priorities.keys %>
+  </div>
+
+  <div>
+    <%= form.label :category %>
+    <%= form.text_field :category %>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

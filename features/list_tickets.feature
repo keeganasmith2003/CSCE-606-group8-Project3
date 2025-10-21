@@ -5,7 +5,7 @@ Feature: List Tickets
 
   Background:
     Given the following tickets exist:
-      | title        | description           |
+      | subject        | description           |
       | Login Issue  | Cannot access account |
       | Bug Report   | App crashes sometimes |
 

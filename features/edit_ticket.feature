@@ -5,7 +5,7 @@ Feature: Edit Ticket
 
   Background:
     Given the following tickets exist:
-      | title        | description              |
+      | subject        | description              |
       | Password Bug | Old description text     |
 
   Scenario: Successfully editing an existing ticket

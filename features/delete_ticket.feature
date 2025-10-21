@@ -5,7 +5,7 @@ Feature: Delete Ticket
 
   Background:
     Given the following tickets exist:
-      | title        | description        |
+      | subject        | description        |
       | Test Ticket  | Delete this later  |
 
     Scenario: Successfully deleting a ticket
