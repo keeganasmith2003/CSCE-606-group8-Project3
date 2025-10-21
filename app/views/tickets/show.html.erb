@@ -8,13 +8,7 @@
 <p><strong>Description:</strong></p>
 <p><%= @ticket.description %></p>
 
-<% if policy(@ticket).assign? %>
-  <%= form_with url: assign_ticket_path(@ticket), method: :post do |form| %>
-    <%= form.label :agent_id, 'Assign to:' %>
-    <%= form.select :agent_id, User.where(role: :agent).collect { |u| [u.display_name, u.id] }, include_blank: true %>
-    <%= form.submit 'Assign' %>
-  <% end %>
-<% end %>
 
-<%= link_to 'Edit', edit_ticket_path(@ticket) if policy(@ticket).edit? %>
+
+<%= link_to 'Edit', edit_ticket_path(@ticket) %>
 <%= link_to 'Back', tickets_path %>

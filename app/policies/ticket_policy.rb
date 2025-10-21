@@ -16,9 +16,10 @@ class TicketPolicy < ApplicationPolicy
   end
 
   def update?
+    return false if record.closed?
     return true if user.admin?
-    return true if user.agent? && record.requester != user
-    return true if user.requester? && record.requester == user && record.open?
+    return true if user.agent?
+    return true if user.requester? && record.requester == user
     false
   end
 
@@ -27,7 +28,8 @@ class TicketPolicy < ApplicationPolicy
   end
 
   def destroy?
-    user.admin? || (user.requester? && record.requester == user && record.open?)
+    return false if record.closed?
+    user.admin? || (user.requester? && record.requester == user)
   end
 
   def assign?

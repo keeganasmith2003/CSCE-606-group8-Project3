@@ -1,10 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe "tickets/edit", type: :view do
+  let(:requester) { FactoryBot.create(:user, :requester) }
   let(:ticket) {
     Ticket.create!(
-      title: "MyString",
-      description: "MyText"
+      subject: "MyString",
+      description: "MyText",
+      priority: :low,
+      requester: requester,
+      status: :pending
     )
   }
 
@@ -16,7 +20,7 @@ RSpec.describe "tickets/edit", type: :view do
     render
 
     assert_select "form[action=?][method=?]", ticket_path(ticket), "post" do
-      assert_select "input[name=?]", "ticket[title]"
+      assert_select "input[name=?]", "ticket[subject]"
 
       assert_select "textarea[name=?]", "ticket[description]"
     end

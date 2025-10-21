@@ -1,8 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Ticket, type: :model do
-  let(:requester) { FactoryBot.create(:user, role: :requester) }
-  let(:agent) { FactoryBot.create(:user, role: :agent) }
+  let(:requester) { FactoryBot.create(:user, role: :user) }
+  let(:agent) { FactoryBot.create(:user, role: :staff) }
   let(:ticket) { FactoryBot.create(:ticket, requester: requester, assignee: agent) }
 
   describe 'associations' do
@@ -35,6 +35,7 @@ RSpec.describe Ticket, type: :model do
       it 'clears closed_at timestamp' do
         ticket.update(status: :closed)
         ticket.update(status: :open)
+        ticket.reload
         expect(ticket.closed_at).to be_nil
       end
     end

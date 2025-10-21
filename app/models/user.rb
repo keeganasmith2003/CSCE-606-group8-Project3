@@ -29,12 +29,12 @@ class User < ApplicationRecord
 
     if creds["expires_at"].present?
       user.access_token_expires_at = case expires_at = creds["expires_at"]
-                                     when Numeric then Time.at(expires_at)
-                                     when String  then Time.parse(expires_at)
-                                     when Time    then expires_at
-                                     else
+      when Numeric then Time.at(expires_at)
+      when String  then Time.parse(expires_at)
+      when Time    then expires_at
+      else
                                        expires_at # let AR try to cast
-                                     end
+      end
     end
 
     user.save!

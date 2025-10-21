@@ -5,18 +5,18 @@ FactoryBot.define do
     email    { "user#{SecureRandom.hex(3)}@example.com" }
     name     { "Test User" }
     image_url { "https://example.com/a.png" }
-    role { :requester }
+    role { :user }
 
     trait :requester do
-      role { :requester }
+      role { :user }
     end
 
     trait :agent do
-      role { :agent }
+      role { :staff }
     end
 
     trait :admin do
-      role { :admin }
+      role { :sysadmin }
     end
   end
 end

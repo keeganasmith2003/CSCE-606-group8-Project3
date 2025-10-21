@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe TicketPolicy do
-  let(:requester) { FactoryBot.create(:user, role: :requester) }
-  let(:agent) { FactoryBot.create(:user, role: :agent) }
-  let(:admin) { FactoryBot.create(:user, role: :admin) }
+  let(:requester) { FactoryBot.create(:user, role: :user) }
+  let(:agent) { FactoryBot.create(:user, role: :staff) }
+  let(:admin) { FactoryBot.create(:user, role: :sysadmin) }
   let(:ticket) { FactoryBot.create(:ticket, requester: requester) }
 
   subject { described_class.new(user, ticket) }
@@ -11,46 +11,46 @@ RSpec.describe TicketPolicy do
   context 'when user is requester' do
     let(:user) { requester }
 
-    it { is_expected.to permit_action(:index) }
-    it { is_expected.to permit_action(:show) }
-    it { is_expected.to permit_action(:create) }
-    it { is_expected.to permit_action(:new) }
-    it { is_expected.to permit_action(:update) }
-    it { is_expected.to permit_action(:edit) }
-    it { is_expected.to permit_action(:destroy) }
-    it { is_expected.not_to permit_action(:assign) }
+    it { expect(subject.permit?(:index)).to be true }
+    it { expect(subject.permit?(:show)).to be true }
+    it { expect(subject.permit?(:create)).to be true }
+    it { expect(subject.permit?(:new)).to be true }
+    it { expect(subject.permit?(:update)).to be true }
+    it { expect(subject.permit?(:edit)).to be true }
+    it { expect(subject.permit?(:destroy)).to be true }
+    it { expect(subject.permit?(:assign)).to be false }
 
     context 'when ticket is closed' do
       before { ticket.update(status: :closed) }
-      it { is_expected.not_to permit_action(:update) }
-      it { is_expected.not_to permit_action(:edit) }
-      it { is_expected.not_to permit_action(:destroy) }
+      it { expect(subject.permit?(:update)).to be false }
+      it { expect(subject.permit?(:edit)).to be false }
+      it { expect(subject.permit?(:destroy)).to be false }
     end
   end
 
   context 'when user is agent' do
     let(:user) { agent }
 
-    it { is_expected.to permit_action(:index) }
-    it { is_expected.to permit_action(:show) }
-    it { is_expected.to permit_action(:create) }
-    it { is_expected.to permit_action(:new) }
-    it { is_expected.to permit_action(:update) }
-    it { is_expected.to permit_action(:edit) }
-    it { is_expected.to permit_action(:assign) }
-    it { is_expected.not_to permit_action(:destroy) }
+    it { expect(subject.permit?(:index)).to be true }
+    it { expect(subject.permit?(:show)).to be true }
+    it { expect(subject.permit?(:create)).to be true }
+    it { expect(subject.permit?(:new)).to be true }
+    it { expect(subject.permit?(:update)).to be true }
+    it { expect(subject.permit?(:edit)).to be true }
+    it { expect(subject.permit?(:assign)).to be true }
+    it { expect(subject.permit?(:destroy)).to be false }
   end
 
   context 'when user is admin' do
     let(:user) { admin }
 
-    it { is_expected.to permit_action(:index) }
-    it { is_expected.to permit_action(:show) }
-    it { is_expected.to permit_action(:create) }
-    it { is_expected.to permit_action(:new) }
-    it { is_expected.to permit_action(:update) }
-    it { is_expected.to permit_action(:edit) }
-    it { is_expected.to permit_action(:assign) }
-    it { is_expected.to permit_action(:destroy) }
+    it { expect(subject.permit?(:index)).to be true }
+    it { expect(subject.permit?(:show)).to be true }
+    it { expect(subject.permit?(:create)).to be true }
+    it { expect(subject.permit?(:new)).to be true }
+    it { expect(subject.permit?(:update)).to be true }
+    it { expect(subject.permit?(:edit)).to be true }
+    it { expect(subject.permit?(:assign)).to be true }
+    it { expect(subject.permit?(:destroy)).to be true }
   end
 end

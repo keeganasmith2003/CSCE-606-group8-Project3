@@ -1,10 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe "tickets/show", type: :view do
+  let(:requester) { FactoryBot.create(:user, :requester) }
   before(:each) do
     assign(:ticket, Ticket.create!(
-      title: "Title",
-      description: "MyText"
+      subject: "Title",
+      description: "MyText",
+      priority: :low,
+      requester: requester,
+      status: :pending
     ))
   end
 

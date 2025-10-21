@@ -1,12 +1,12 @@
 FactoryBot.define do
   factory :ticket do
-    subject { "MyString" }
-    description { "MyText" }
-    status { 1 }
-    priority { 1 }
-    requester { nil }
+    subject { "Test Ticket" }
+    description { "Test Description" }
+    status { :open }
+    priority { :normal }
+    association :requester, factory: :user
     assignee { nil }
-    category { "MyString" }
-    closed_at { "2025-10-20 10:23:41" }
+    category { "General" }
+    closed_at { nil }
   end
 end

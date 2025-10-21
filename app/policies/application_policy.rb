@@ -34,6 +34,10 @@ class ApplicationPolicy
     false
   end
 
+  def permit?(action)
+    public_send("#{action}?")
+  end
+
   class Scope
     def initialize(user, scope)
       @user = user

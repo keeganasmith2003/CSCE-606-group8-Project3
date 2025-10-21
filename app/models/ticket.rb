@@ -11,14 +11,14 @@ class Ticket < ApplicationRecord
   validates :priority, presence: true
   validates :requester, presence: true
 
-  before_save :set_closed_at, if: :status_changed?
+  before_save :set_closed_at
 
   private
 
   def set_closed_at
-    if status == "closed"
-      self.closed_at = Time.current
-    elsif status_was == "closed" && status != "closed"
+    if closed?
+      self.closed_at = Time.current unless closed_at.present?
+    else
       self.closed_at = nil
     end
   end

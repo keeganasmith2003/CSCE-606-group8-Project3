@@ -23,4 +23,13 @@ end
 RSpec.configure do |config|
   # make it available to request specs (and you can add :system, :feature, etc.)
   config.include OmniauthHelpers, type: :request
+
+  # Helper method for signing in users in request specs
+  config.include Module.new {
+    def sign_in(user)
+      mock_google_auth(uid: user.uid, email: user.email, name: user.name || "Tester")
+      get "/auth/google_oauth2/callback"
+      expect(session[:user_id]).to eq(user.id)
+    end
+  }, type: :request
 end
