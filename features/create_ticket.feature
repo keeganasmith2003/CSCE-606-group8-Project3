@@ -7,8 +7,10 @@ Feature: Create Ticket
     Given I am on the new ticket page
     When I fill in "Subject" with "Login issue"
     And I fill in "Description" with "Cannot access my account"
+    And I select "open" from "Status"
+    And I select "low" from "Priority"
+    And I fill in "Category" with "General"
     And I press "Create Ticket"
     Then I should see "Ticket was successfully created"
     When I go to the tickets list page
     Then I should see "Login issue" in the ticket list
-

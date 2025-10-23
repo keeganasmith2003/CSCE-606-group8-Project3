@@ -94,6 +94,6 @@ Then("I should be denied access") do
   expect(denied).to be(true), "Expected an authorization failure (flash or 401/403), but didn't detect one"
 end
 
-When('I select {string} from {string}') do |option, field_label|
-  select option, from: field_label
-end
+# When('I select {string} from {string}') do |option, field_label|
+#   select option, from: field_label
+# end

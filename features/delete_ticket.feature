@@ -5,8 +5,8 @@ Feature: Delete Ticket
 
   Background:
     Given the following tickets exist:
-      | subject        | description        |
-      | Test Ticket  | Delete this later  |
+      | subject        | description        | requester_email       |
+      | Test Ticket  | Delete this later  | testuser@example.com |
 
     Scenario: Successfully deleting a ticket
         Given I am on the ticket page for "Test Ticket"
