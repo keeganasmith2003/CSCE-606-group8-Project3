@@ -3,9 +3,15 @@
 <div id="tickets">
   <% @tickets.each do |ticket| %>
     <div>
-      <p><%= ticket.subject %></p>
-      <p><%= ticket.description %></p>
+      <h2><%= link_to ticket.subject, ticket %></h2>
+      <p><strong>Status:</strong> <%= ticket.status.titleize %></p>
+      <p><strong>Priority:</strong> <%= ticket.priority.present? ? ticket.priority.titleize : "Not set" %></p>
+      <p><strong>Category:</strong> <%= ticket.category %></p>
+      <p><%= truncate(ticket.description, length: 160) %></p>
       <p><%= link_to "Show this ticket", ticket %></p>
+      <% if policy(ticket).destroy? %>
+        <%= button_to "Delete", ticket_path(ticket), method: :delete, data: { confirm: "Delete this ticket?" } %>
+      <% end %>
     </div>
   <% end %>
 </div>

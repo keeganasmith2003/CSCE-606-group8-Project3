@@ -1,14 +1,82 @@
 <h1><%= @ticket.subject %></h1>
 
-<p><strong>Status:</strong> <%= @ticket.status %></p>
-<p><strong>Priority:</strong> <%= @ticket.priority %></p>
-<p><strong>Requester:</strong> <%= @ticket.requester.display_name %></p>
-<p><strong>Assignee:</strong> <%= @ticket.assignee&.display_name || 'Unassigned' %></p>
-<p><strong>Category:</strong> <%= @ticket.category %></p>
-<p><strong>Description:</strong></p>
-<p><%= @ticket.description %></p>
+<dl>
+  <dt>Status</dt>
+  <dd><%= @ticket.status.titleize %></dd>
 
+  <dt>Priority</dt>
+  <dd><%= @ticket.priority.present? ? @ticket.priority.titleize : "Not set" %></dd>
 
+  <dt>Category</dt>
+  <dd><%= @ticket.category %></dd>
 
-<%= link_to 'Edit', edit_ticket_path(@ticket) %>
-<%= link_to 'Back', tickets_path %>
+  <dt>Requester</dt>
+  <dd><%= @ticket.requester.display_name %></dd>
+
+  <dt>Assignee</dt>
+  <dd><%= @ticket.assignee&.display_name || "Unassigned" %></dd>
+
+  <% if @ticket.closed_at.present? %>
+    <dt>Closed At</dt>
+    <dd><%= l(@ticket.closed_at, format: :long) %></dd>
+  <% end %>
+</dl>
+
+<section>
+  <h2>Description</h2>
+  <div><%= simple_format(@ticket.description) %></div>
+</section>
+
+<div class="ticket-actions">
+  <%= link_to "Edit", edit_ticket_path(@ticket) %>
+  <%= link_to "Back", tickets_path %>
+
+  <% if policy(@ticket).close? %>
+    <%= button_to "Close Ticket", close_ticket_path(@ticket), method: :patch, data: { confirm: "Close this ticket?" } %>
+  <% end %>
+
+  <% if policy(@ticket).destroy? %>
+    <%= button_to "Delete Ticket", ticket_path(@ticket), method: :delete, data: { confirm: "Delete this ticket?" } %>
+  <% end %>
+</div>
+
+<section>
+  <h2>Comments</h2>
+  <% if @comments.any? %>
+    <% @comments.each do |comment| %>
+      <article>
+        <header>
+          <strong><%= comment.author.display_name %></strong>
+          <span>(<%= comment.visibility.titleize %>)</span>
+          <time><%= l(comment.created_at, format: :long) %></time>
+        </header>
+        <div><%= simple_format(comment.body) %></div>
+      </article>
+    <% end %>
+  <% else %>
+    <p>No comments yet.</p>
+  <% end %>
+</section>
+
+<% if policy(@comment).create? %>
+  <section>
+    <h3>Add a Comment</h3>
+    <%= form_with(model: [@ticket, @comment]) do |form| %>
+      <div>
+        <%= form.label :body, "Comment" %>
+        <%= form.text_area :body %>
+      </div>
+
+      <% if current_user.agent? || current_user.admin? %>
+        <div>
+          <%= form.label :visibility %>
+          <%= form.select :visibility, Comment.visibilities.keys.map { |v| [v.titleize, v] } %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.submit "Post Comment" %>
+      </div>
+    <% end %>
+  </section>
+<% end %>

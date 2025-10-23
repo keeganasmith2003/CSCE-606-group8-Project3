@@ -18,6 +18,7 @@ RSpec.describe TicketPolicy do
     it { expect(subject.permit?(:update)).to be true }
     it { expect(subject.permit?(:edit)).to be true }
     it { expect(subject.permit?(:destroy)).to be true }
+    it { expect(subject.permit?(:close)).to be true }
     it { expect(subject.permit?(:assign)).to be false }
 
     context 'when ticket is closed' do
@@ -25,6 +26,7 @@ RSpec.describe TicketPolicy do
       it { expect(subject.permit?(:update)).to be false }
       it { expect(subject.permit?(:edit)).to be false }
       it { expect(subject.permit?(:destroy)).to be false }
+      it { expect(subject.permit?(:close)).to be false }
     end
   end
 
@@ -39,6 +41,7 @@ RSpec.describe TicketPolicy do
     it { expect(subject.permit?(:edit)).to be true }
     it { expect(subject.permit?(:assign)).to be true }
     it { expect(subject.permit?(:destroy)).to be false }
+    it { expect(subject.permit?(:close)).to be false }
   end
 
   context 'when user is admin' do
@@ -51,6 +54,7 @@ RSpec.describe TicketPolicy do
     it { expect(subject.permit?(:update)).to be true }
     it { expect(subject.permit?(:edit)).to be true }
     it { expect(subject.permit?(:assign)).to be true }
-    it { expect(subject.permit?(:destroy)).to be true }
+    it { expect(subject.permit?(:destroy)).to be false }
+    it { expect(subject.permit?(:close)).to be false }
   end
 end

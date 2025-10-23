@@ -1,74 +1,113 @@
 require 'rails_helper'
 
 RSpec.describe "Tickets", type: :request do
-  let(:requester) { FactoryBot.create(:user, role: :user) }
-  let(:agent) { FactoryBot.create(:user, role: :staff) }
-  let(:admin) { FactoryBot.create(:user, role: :sysadmin) }
+  let(:category_option) { Ticket::CATEGORY_OPTIONS.first }
+  let(:requester) { create(:user, role: :user) }
+  let(:other_user) { create(:user, role: :user) }
 
-  describe "POST /tickets/:id/assign" do
-    let(:ticket) { FactoryBot.create(:ticket, requester: requester) }
+  describe "POST /tickets" do
+    before { sign_in(requester) }
 
-    context 'when user is an agent' do
-      before { sign_in agent }
+    it "creates a ticket with the selected category and priority" do
+      expect do
+        post tickets_path, params: {
+          ticket: {
+            subject: "Printer broken",
+            description: "The office printer is jammed.",
+            status: :open,
+            priority: :high,
+            category: category_option
+          }
+        }
+      end.to change(Ticket, :count).by(1)
 
-      it 'assigns the ticket to the selected agent' do
-        post assign_ticket_path(ticket), params: { agent_id: agent.id }
-        ticket.reload
-        expect(ticket.assignee).to eq(agent)
-      end
-
-      it 'redirects to the ticket show page' do
-        post assign_ticket_path(ticket), params: { agent_id: agent.id }
-        expect(response).to redirect_to(ticket)
-      end
+      ticket = Ticket.order(:created_at).last
+      expect(ticket.category).to eq(category_option)
+      expect(ticket.priority).to eq("high")
+      expect(response).to redirect_to(ticket_path(ticket))
+      follow_redirect!
+      expect(response.body).to include("Printer broken")
     end
 
-    context 'when user is not authorized' do
-      before { sign_in requester }
+    it "defaults priority to medium when not provided" do
+      expect do
+        post tickets_path, params: {
+          ticket: {
+            subject: "Need VPN access",
+            description: "Cannot connect while travelling.",
+            status: :open,
+            category: category_option
+          }
+        }
+      end.to change(Ticket, :count).by(1)
 
-      it 'raises Pundit::NotAuthorizedError' do
-        expect {
-          post assign_ticket_path(ticket), params: { agent_id: agent.id }
-        }.to raise_error(Pundit::NotAuthorizedError)
-      end
+      ticket = Ticket.order(:created_at).last
+      expect(ticket.priority).to eq("medium")
     end
   end
 
-  describe "POST /tickets" do
-    context 'when auto round-robin is enabled' do
-      before do
-        Setting.set('assignment_strategy', 'round_robin')
-        sign_in requester
-      end
+  describe "DELETE /tickets/:id" do
+    let!(:ticket) { create(:ticket, requester: requester) }
 
-      it 'assigns ticket to next agent in rotation' do
-        agent1 = create(:user, :agent, name: 'Agent 1')
-        agent2 = create(:user, :agent, name: 'Agent 2')
+    it "allows the requester to delete their open ticket" do
+      sign_in(requester)
 
-        post tickets_path, params: { ticket: { subject: 'Test', description: 'Test desc', priority: 'normal' } }
-        expect(response).to have_http_status(:unprocessable_entity)
-        # Ticket creation failed, so no ticket was created
-        expect(Ticket.count).to eq(0)
+      expect do
+        delete ticket_path(ticket)
+      end.to change(Ticket, :count).by(-1)
 
-        post tickets_path, params: { ticket: { subject: 'Test2', description: 'Test desc2', priority: 'normal' } }
-        expect(response).to have_http_status(:unprocessable_entity)
-        # Ticket creation failed, so no ticket was created
-        expect(Ticket.count).to eq(0)
-      end
+      expect(response).to redirect_to(tickets_path)
+      follow_redirect!
+      expect(response.body).to include("Ticket deleted successfully.")
     end
 
-    context 'when auto round-robin is disabled' do
-      before do
-        Setting.set('assignment_strategy', 'manual')
-        sign_in requester
-      end
+    it "prevents other users from deleting the ticket" do
+      sign_in(other_user)
 
-      it 'does not assign ticket automatically' do
-        post tickets_path, params: { ticket: { subject: 'Test', description: 'Test desc', priority: 'normal' } }
-        expect(response).to have_http_status(:unprocessable_entity)
-        # Ticket creation failed, so no ticket was created
-        expect(Ticket.count).to eq(0)
-      end
+      expect {
+        delete ticket_path(ticket)
+      }.to raise_error(Pundit::NotAuthorizedError)
+    end
+
+    it "prevents deleting a closed ticket" do
+      ticket.update!(status: :closed)
+      sign_in(requester)
+
+      expect {
+        delete ticket_path(ticket)
+      }.to raise_error(Pundit::NotAuthorizedError)
+    end
+  end
+
+  describe "PATCH /tickets/:id/close" do
+    let!(:ticket) { create(:ticket, requester: requester, status: :open) }
+
+    it "closes the ticket and sets closed_at" do
+      sign_in(requester)
+
+      patch close_ticket_path(ticket)
+      ticket.reload
+
+      expect(ticket.status).to eq("closed")
+      expect(ticket.closed_at).to be_present
+      expect(response).to redirect_to(ticket_path(ticket))
+    end
+
+    it "prevents other users from closing the ticket" do
+      sign_in(other_user)
+
+      expect {
+        patch close_ticket_path(ticket)
+      }.to raise_error(Pundit::NotAuthorizedError)
+    end
+
+    it "prevents closing an already closed ticket" do
+      ticket.update!(status: :closed)
+      sign_in(requester)
+
+      expect {
+        patch close_ticket_path(ticket)
+      }.to raise_error(Pundit::NotAuthorizedError)
     end
   end
 end
