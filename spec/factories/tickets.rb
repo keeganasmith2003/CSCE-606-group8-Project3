@@ -3,10 +3,10 @@ FactoryBot.define do
     subject { "Test Ticket" }
     description { "Test Description" }
     status { :open }
-    priority { :normal }
+    priority { :medium }
     association :requester, factory: :user
     assignee { nil }
-    category { "General" }
+    category { Ticket::CATEGORY_OPTIONS.first }
     closed_at { nil }
   end
 end

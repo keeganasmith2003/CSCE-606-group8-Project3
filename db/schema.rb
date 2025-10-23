@@ -10,7 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_152600) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_20_152900) do
+  create_table "comments", force: :cascade do |t|
+    t.integer "ticket_id", null: false
+    t.integer "author_id", null: false
+    t.text "body", null: false
+    t.integer "visibility", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_comments_on_author_id"
+    t.index ["ticket_id"], name: "index_comments_on_ticket_id"
+  end
+
   create_table "settings", force: :cascade do |t|
     t.string "key"
     t.text "value"
@@ -22,7 +33,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_152600) do
     t.string "subject"
     t.text "description"
     t.integer "status"
-    t.integer "priority"
+    t.integer "priority", default: 1
     t.integer "requester_id", null: false
     t.integer "assignee_id"
     t.string "category"
@@ -50,6 +61,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_152600) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  add_foreign_key "comments", "tickets"
+  add_foreign_key "comments", "users", column: "author_id"
   add_foreign_key "tickets", "users", column: "assignee_id"
   add_foreign_key "tickets", "users", column: "requester_id"
 end

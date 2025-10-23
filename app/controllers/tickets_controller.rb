@@ -1,15 +1,25 @@
 class TicketsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_ticket, only: %i[show edit update destroy assign]
+  before_action :set_ticket, only: %i[show edit update destroy assign close]
 
   def index
     @tickets = policy_scope(Ticket)
     @tickets = @tickets.where(status: params[:status]) if params[:status].present?
+    @tickets = @tickets.where(category: params[:category]) if params[:category].present?
     @tickets = @tickets.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
   end
 
   def show
     authorize @ticket
+    @comments = @ticket.comments.includes(:author).chronological
+    unless current_user&.agent? || current_user&.admin?
+      if current_user == @ticket.requester
+        @comments = @comments.where(visibility: Comment.visibilities[:public])
+      else
+        @comments = Comment.none
+      end
+    end
+    @comment  = @ticket.comments.build(author: current_user, visibility: :public)
   end
 
   def new
@@ -49,7 +59,17 @@ class TicketsController < ApplicationController
   def destroy
     authorize @ticket
     @ticket.destroy
-    redirect_to tickets_url, notice: "Ticket was successfully destroyed."
+    redirect_to tickets_url, notice: "Ticket deleted successfully."
+  end
+
+  def close
+    authorize @ticket, :close?
+
+    if @ticket.update(status: :closed)
+      redirect_to @ticket, notice: "Ticket closed successfully."
+    else
+      redirect_to @ticket, alert: @ticket.errors.full_messages.to_sentence
+    end
   end
 
   def assign

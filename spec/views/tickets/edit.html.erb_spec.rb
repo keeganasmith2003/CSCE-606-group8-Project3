@@ -2,15 +2,16 @@ require 'rails_helper'
 
 RSpec.describe "tickets/edit", type: :view do
   let(:requester) { FactoryBot.create(:user, :requester) }
-  let(:ticket) {
-    Ticket.create!(
+  let(:ticket) do
+    create(
+      :ticket,
       subject: "MyString",
       description: "MyText",
       priority: :low,
       requester: requester,
       status: :pending
     )
-  }
+  end
 
   before(:each) do
     assign(:ticket, ticket)

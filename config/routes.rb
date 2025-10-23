@@ -3,7 +3,11 @@ Rails.application.routes.draw do
 
   resources :users
   resources :tickets do
-    post :assign, on: :member
+    member do
+      post :assign
+      patch :close
+    end
+    resources :comments, only: :create
   end
   get    "/login",  to: "sessions#new"
   delete "/logout", to: "sessions#destroy"

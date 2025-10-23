@@ -17,20 +17,19 @@
     <%= form.text_area :description %>
   </div>
 
-    <div>
+  <div>
     <%= form.label :status %>
     <%= form.select :status, Ticket.statuses.keys.map { |s| [s.titleize, s] } %>
-    </div>
-
+  </div>
 
   <div>
     <%= form.label :priority %>
-    <%= form.select :priority, Ticket.priorities.keys %>
+    <%= form.select :priority, Ticket.priorities.keys.map { |p| [p.titleize, p] }, {}, { class: "priority-select" } %>
   </div>
 
   <div>
     <%= form.label :category %>
-    <%= form.text_field :category %>
+    <%= form.select :category, Ticket::CATEGORY_OPTIONS, { prompt: "Select a category" }, { class: "category-select" } %>
   </div>
 
   <div>

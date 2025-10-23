@@ -28,8 +28,12 @@ class TicketPolicy < ApplicationPolicy
   end
 
   def destroy?
-    return false if record.closed?
-    user.admin? || (user.requester? && record.requester == user)
+    return false unless record.open?
+    user.requester? && record.requester == user
+  end
+
+  def close?
+    record.open? && record.requester == user
   end
 
   def assign?
