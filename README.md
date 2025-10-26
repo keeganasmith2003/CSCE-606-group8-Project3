@@ -50,19 +50,11 @@ Below are the architecture and class diagrams. The feature renderer used for tes
 
 **Architecture Diagram**
 
-![Project Architecture](/home/mihir/Pictures/Screenshots/project2architecture_diagram.png)
-
-If the image above does not render in your environment, place the file at `doc/images/project2architecture_diagram.png` and use this relative path instead:
-
-`![Project Architecture](doc/images/project2architecture_diagram.png)`
+![Project Architecture](doc/images/project2architecture_diagram.png)
 
 **Class Diagram**
 
-![Class Diagram](/home/mihir/Pictures/Screenshots/project2_class_diagram.png)
-
-Fallback relative path suggestion if needed:
-
-`![Class Diagram](doc/images/project2_class_diagram.png)`
+![Class Diagram](doc/images/project2_class_diagram.png)
 
 ## How to run (notes)
 
@@ -88,5 +80,3 @@ Fallback relative path suggestion if needed:
 - Add docs images to `doc/images/` to make the README portable
 
 ---
-
-If you'd like, I can copy the two PNGs from `/home/mihir/Pictures/Screenshots` into `doc/images/` inside the repository for portable rendering and update the README to reference the relative paths. Tell me if you want me to do that and I will copy them in and commit the change.
