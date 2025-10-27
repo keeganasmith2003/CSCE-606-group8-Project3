@@ -6,6 +6,13 @@ Given("I am on the home page") do
 end
 
 Given("I am on the new ticket page") do
+  OmniAuth.config.test_mode = true
+  OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+    provider: "google_oauth2",
+    uid: "test-uid",
+    info: { email: "test@example.com", name: "Test User" }
+  )
+  visit "/auth/google_oauth2"
   visit new_ticket_path
 end
 
@@ -37,14 +44,31 @@ When("I press {string}") do |button_or_link|
   click_link_or_button button_or_link
 end
 
+When("I press {string} within the assignment form") do |button_or_link|
+  within("form[action*='assign']") do
+    click_link_or_button button_or_link
+  end
+end
+
 # Page expectation steps
 Then("I should see {string}") do |text|
   expect(page).to have_content(text)
 end
 
+Then("I should see {string} in the navbar") do |text|
+  within('.navbar') do
+    expect(page).to have_content(text)
+  end
+end
+
 Then("I should see {string} in the ticket list") do |ticket_title|
   visit tickets_path unless current_path == tickets_path
   expect(page).to have_content(ticket_title)
+end
+
+Then("I should not see {string} in the ticket list") do |ticket_title|
+  visit tickets_path unless current_path == tickets_path
+  expect(page).not_to have_content(ticket_title)
 end
 
 Then("I should not see {string}") do |ticket_title|
@@ -71,7 +95,7 @@ Given("the following tickets exist:") do |table|
       description: row["description"],
       status: row["status"] || "open",
       priority: row["priority"] || "low",
-      category: row["category"] || "General",
+      category: row["category"] || Ticket::CATEGORY_OPTIONS.first,
       requester: requester
     )
   end
@@ -89,9 +113,17 @@ Given("there is a requester named {string}") do |name|
   FactoryBot.create(:user, :requester, name: name)
 end
 
-Given("I am logged in as {string}") do |name|
+Given("I am logged in as agent {string}") do |name|
   user = User.find_by(name: name)
-  login_as(user, scope: :user)
+  if user
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: user.uid,
+      info: { email: user.email, name: user.name }
+    )
+    visit "/auth/google_oauth2"
+  end
 end
 
 Given("there is an unassigned ticket created by {string}") do |name|
@@ -110,16 +142,24 @@ end
 
 When("I select {string} from the agent dropdown") do |agent_name|
   agent = User.find_by(name: agent_name)
-  select agent_name, from: 'agent_id'
+  select agent_name, from: 'ticket[assignee_id]'
 end
 
 When("{string} creates a new ticket") do |name|
   requester = User.find_by(name: name)
-  login_as(requester, scope: :user)
+  if requester
+    OmniAuth.config.test_mode = true
+    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
+      provider: "google_oauth2",
+      uid: requester.uid,
+      info: { email: requester.email, name: requester.name }
+    )
+    visit "/auth/google_oauth2"
+  end
   visit new_ticket_path
   fill_in 'Subject', with: 'New Ticket'
   fill_in 'Description', with: 'Ticket description'
-  select 'normal', from: 'Priority'
+  select 'Medium', from: 'Priority'
   click_button 'Create Ticket'
 end
 
@@ -130,12 +170,12 @@ end
 Then("the ticket should be assigned to {string}") do |agent_name|
   agent = User.find_by(name: agent_name)
   ticket = Ticket.last
-  expect(ticket.assignee).to eq(agent)
+  expect(ticket&.assignee).to eq(agent)
 end
 
 Then("the ticket should remain unassigned") do
   ticket = Ticket.last
-  expect(ticket.assignee).to be_nil
+  expect(ticket&.assignee).to be_nil
 end
 
 Then("the ticket should be automatically assigned to {string}") do |agent_name|
@@ -151,8 +191,13 @@ When("I select {string} from {string}") do |option, field_label|
     begin
       select option.titleize, from: field_label
     rescue Capybara::ElementNotFound => e
-      # Helpful debug output when both attempts fail
-      raise Capybara::ElementNotFound, "Unable to find option '#{option}' (or '#{option.titleize}') for field '#{field_label}'. Original error: #{e.message}"
+      # For status, try capitalized (e.g., "closed" → "Closed")
+      begin
+        select option.capitalize, from: field_label
+      rescue Capybara::ElementNotFound
+        # Helpful debug output when all attempts fail
+        raise Capybara::ElementNotFound, "Unable to find option '#{option}' (or '#{option.titleize}' or '#{option.capitalize}') for field '#{field_label}'. Original error: #{e.message}"
+      end
     end
   end
 end

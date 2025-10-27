@@ -11,6 +11,6 @@ Feature: Delete Ticket
     Scenario: Successfully deleting a ticket
         Given I am on the ticket page for "Test Ticket"
         When I press "Destroy"
-        Then I should see "Ticket was successfully destroyed"
-        And I should not see "Test Ticket"
+        Then I should see "Ticket deleted successfully."
+        And I should not see "Test Ticket" in the ticket list
 

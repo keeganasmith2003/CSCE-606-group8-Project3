@@ -7,13 +7,13 @@ Feature: Assign Ticket
     Given there is an agent named "Alice"
     And there is an agent named "Bob"
     And there is a requester named "Charlie"
-    And I am logged in as "Alice"
+    And I am logged in as agent "Alice"
 
   Scenario: Manually assign a ticket to an agent
     Given there is an unassigned ticket created by "Charlie"
     When I visit the ticket page
     And I select "Bob" from the agent dropdown
-    And I press "Assign"
+    And I press "Assign" within the assignment form
     Then I should see "Ticket assigned to Bob"
     And the ticket should be assigned to "Bob"
 

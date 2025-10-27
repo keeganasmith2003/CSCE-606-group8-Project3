@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   resources :users
   resources :tickets do
     member do
-      post :assign
+      patch :assign
       patch :close
     end
     resources :comments, only: :create

@@ -37,6 +37,11 @@ When("I click {string}") do |label|
   click_link_or_button label
 end
 
+Given("I am logged in as {string}") do |name|
+  user = User.find_by(name: name)
+  login_as(user, scope: :user) if user
+end
+
 Then("the app should have exactly {int} user with email {string}") do |count, email|
   expect(User.where(email: email.downcase).count).to eq(count)
 end

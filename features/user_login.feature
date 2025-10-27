@@ -14,7 +14,7 @@ Feature: User login with Google
     Given the Google mock returns uid "123", email "first@example.com", name "First User"
     When I click "Login with Google"
     Then I should see "Signed in as First User"
-    And I should see "Hi, First User of role user"
+    And I should see "Hi, First User of role user" in the navbar
     And the app should have exactly 1 user with email "first@example.com"
 
 
@@ -22,7 +22,7 @@ Feature: User login with Google
     Given there is a sysadmin in the database with email "root@example.com" named "Root"
     And the Google mock returns uid "root-1", email "root@example.com", name "Root"
     When I click "Login with Google"
-    Then I should see "Users"
+    Then I should see "Users" in the navbar
 
   Scenario: Logout clears session
     Given the Google mock returns uid "bye-1", email "bye@example.com", name "Bye User"

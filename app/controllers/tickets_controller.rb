@@ -74,7 +74,7 @@ class TicketsController < ApplicationController
 
   def assign
     authorize @ticket, :assign?
-    agent = User.find(params[:agent_id])
+    agent = User.find(params[:ticket][:assignee_id])
     @ticket.update(assignee: agent)
     redirect_to @ticket, notice: "Ticket assigned to #{agent.display_name}."
   end

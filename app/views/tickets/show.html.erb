@@ -31,12 +31,20 @@
   <%= link_to "Edit", edit_ticket_path(@ticket) %>
   <%= link_to "Back", tickets_path %>
 
+  <% if policy(@ticket).assign? %>
+    <%= form_with(model: @ticket, url: assign_ticket_path(@ticket), method: :patch, local: true) do |form| %>
+      <%= form.label :assignee_id, "Assign to agent:" %>
+      <%= form.collection_select :assignee_id, User.where(role: :staff), :id, :name, include_blank: "Unassigned" %>
+      <%= form.submit "Assign" %>
+    <% end %>
+  <% end %>
+
   <% if policy(@ticket).close? %>
     <%= button_to "Close Ticket", close_ticket_path(@ticket), method: :patch, data: { confirm: "Close this ticket?" } %>
   <% end %>
 
   <% if policy(@ticket).destroy? %>
-    <%= button_to "Delete Ticket", ticket_path(@ticket), method: :delete, data: { confirm: "Delete this ticket?" } %>
+    <%= button_to "Destroy", ticket_path(@ticket), method: :delete, data: { confirm: "Delete this ticket?" } %>
   <% end %>
 </div>
 

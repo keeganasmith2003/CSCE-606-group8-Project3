@@ -44,6 +44,11 @@ Given("I log in with Google as uid {string}, email {string}, name {string}") do 
   visit "/login"  # SessionsController#new -> redirects to /auth/google_oauth2
 end
 
+Given("I am logged in as {string}") do |name|
+  user = User.find_by(name: name)
+  login_as(user, scope: :user) if user
+end
+
 # ---------- Navigation helpers ----------
 
 When("I visit the users index") do
