@@ -1,19 +1,27 @@
 <h1>Tickets</h1>
 
-<div id="tickets">
+<div id="tickets" class="tickets-index">
   <% @tickets.each do |ticket| %>
-    <div>
-      <h2><%= link_to ticket.subject, ticket %></h2>
-      <p><strong>Status:</strong> <%= ticket.status.titleize %></p>
-      <p><strong>Priority:</strong> <%= ticket.priority.present? ? ticket.priority.titleize : "Not set" %></p>
-      <p><strong>Category:</strong> <%= ticket.category %></p>
-      <p><%= truncate(ticket.description, length: 160) %></p>
-      <p><%= link_to "Show this ticket", ticket %></p>
-      <% if policy(ticket).destroy? %>
-        <%= button_to "Delete", ticket_path(ticket), method: :delete, data: { confirm: "Delete this ticket?" } %>
-      <% end %>
-    </div>
+    <article class="ticket-card">
+      <header class="ticket-card__header">
+        <h2 class="ticket-card__title"><%= link_to ticket.subject, ticket %></h2>
+      </header>
+      <div class="ticket-card__meta">
+        <p><strong>Status:</strong> <span class="status-badge status-<%= ticket.status %>"><%= ticket.status.titleize %></span></p>
+        <p><strong>Priority:</strong> <%= ticket.priority.present? ? ticket.priority.titleize : "Not set" %></p>
+        <p><strong>Category:</strong> <%= ticket.category %></p>
+      </div>
+      <p class="ticket-card__excerpt"><%= truncate(ticket.description, length: 160) %></p>
+      <footer class="ticket-card__actions">
+        <%= link_to "Show this ticket", ticket, class: "btn" %>
+        <% if policy(ticket).destroy? %>
+          <%= button_to "Delete", ticket_path(ticket), method: :delete, data: { confirm: "Delete this ticket?" }, class: "btn btn-danger" %>
+        <% end %>
+      </footer>
+    </article>
   <% end %>
 </div>
 
-<%= link_to "New ticket", new_ticket_path %>
+<div class="page-actions">
+  <%= link_to "New ticket", new_ticket_path, class: "btn" %>
+</div>

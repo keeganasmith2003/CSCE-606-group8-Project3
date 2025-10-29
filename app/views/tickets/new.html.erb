@@ -1,5 +1,9 @@
-<h1>New Ticket</h1>
+<div class="ticket-new">
+  <h1>New Ticket</h1>
 
-<%= render 'form', ticket: @ticket %>
+  <%= render 'form', ticket: @ticket %>
 
-<%= link_to "Back to tickets", tickets_path %>
+  <div class="page-actions">
+    <%= link_to "Back to tickets", tickets_path, class: "btn" %>
+  </div>
+</div>

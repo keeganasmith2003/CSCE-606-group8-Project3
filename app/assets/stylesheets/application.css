@@ -118,3 +118,72 @@
 .field { margin-bottom: 0.75rem; }
 .field label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
 .actions { margin-top: 0.5rem; }
+
+/* Tickets index */
+.tickets-index {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.ticket-card {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  background: #fff;
+}
+
+.ticket-card__title a { text-decoration: none; }
+.ticket-card__title a:hover { text-decoration: underline; }
+.ticket-card__meta { display: flex; flex-wrap: wrap; gap: 1rem; }
+.ticket-card__excerpt { margin: 0.5rem 0; color: #444; }
+.ticket-card__actions { display: flex; gap: 0.5rem; }
+
+.btn-danger { border-color: #e3b4b4; color: #7a1f1f; }
+
+.page-actions { margin-top: 1rem; }
+
+/* Ticket form */
+.form-card {
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 1rem;
+  background: #fff;
+  max-width: 800px;
+}
+
+.form-errors { margin-bottom: 0.75rem; color: #7a1f1f; }
+.form-error { padding: 0.25rem 0; }
+.form-field { margin-bottom: 0.75rem; }
+
+/* New/Edit ticket containers */
+.ticket-new, .ticket-edit {
+  max-width: 960px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+/* Comments section enhancements */
+.ticket-comments { margin-top: 1.5rem; }
+.ticket-comments h2 { margin-bottom: 0.5rem; }
+.comment { background: #fff; border-radius: 4px; }
+.comment-body { color: #333; }
+.comment-form { margin-top: 1rem; }
+.comment-form .actions { margin-top: 0.5rem; }
+
+/* Home index container */
+.home-index {
+  max-width: 960px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+/* Navbar and layout */
+.navbar { display:flex; justify-content:space-between; align-items:center; padding:.75rem 1rem; border-bottom:1px solid #e5e7eb; }
+.brand { font-weight:600; text-decoration:none; margin-right:1rem; }
+.nav-link { margin-right:.75rem; text-decoration:none; color:#111827; }
+.nav-right, .nav-left { display:flex; align-items:center; gap:.5rem; }
+.btn { padding:.45rem .8rem; border:1px solid #d1d5db; border-radius:.5rem; text-decoration:none; display:inline-block; }
+.btn:hover { background:#f9fafb; }
+.container { max-width: 900px; margin: 1.5rem auto; padding: 0 1rem; }
+.flash { margin: .75rem 1rem; padding:.5rem .75rem; border:1px solid #e5e7eb; border-radius:.5rem; }

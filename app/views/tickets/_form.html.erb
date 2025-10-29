@@ -1,38 +1,38 @@
-<%= form_with(model: @ticket, local: true) do |form| %>
+<%= form_with(model: @ticket, local: true, html: { class: "form-card" }) do |form| %>
   <% if @ticket.errors.any? %>
-    <div>
+    <div class="form-errors">
       <% @ticket.errors.full_messages.each do |message| %>
-        <div><%= message %></div>
+        <div class="form-error"><%= message %></div>
       <% end %>
     </div>
   <% end %>
 
-  <div>
+  <div class="form-field">
     <%= form.label :subject %>
     <%= form.text_field :subject %>
   </div>
 
-  <div>
+  <div class="form-field">
     <%= form.label :description %>
     <%= form.text_area :description %>
   </div>
 
-  <div>
+  <div class="form-field">
     <%= form.label :status %>
     <%= form.select :status, Ticket.statuses.keys.map { |s| [s.titleize, s] } %>
   </div>
 
-  <div>
+  <div class="form-field">
     <%= form.label :priority %>
     <%= form.select :priority, Ticket.priorities.keys.map { |p| [p.titleize, p] }, {}, { class: "priority-select" } %>
   </div>
 
-  <div>
+  <div class="form-field">
     <%= form.label :category %>
     <%= form.select :category, Ticket::CATEGORY_OPTIONS, { prompt: "Select a category" }, { class: "category-select" } %>
   </div>
 
-  <div>
+  <div class="actions-row">
     <%= form.submit %>
   </div>
 <% end %>

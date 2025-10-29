@@ -1,6 +1,11 @@
-<h1>Editing Ticket</h1>
+<div class="ticket-edit">
+  <h1>Editing Ticket</h1>
 
-<%= render 'form', ticket: @ticket %>
+  <%= render 'form', ticket: @ticket %>
 
-<%= link_to "Show this ticket", @ticket %> |
-<%= link_to "Back to tickets", tickets_path %>
+  <div class="page-actions">
+    <%= link_to "Show this ticket", @ticket, class: "btn" %>
+    <span> | </span>
+    <%= link_to "Back to tickets", tickets_path, class: "btn" %>
+  </div>
+</div>
