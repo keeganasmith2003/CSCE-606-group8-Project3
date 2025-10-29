@@ -4,7 +4,8 @@ class TicketPolicy < ApplicationPolicy
   end
 
   def show?
-    true
+    return true if user.admin? || user.agent?
+    user.requester? && record.requester == user
   end
 
   def create?
@@ -13,6 +14,12 @@ class TicketPolicy < ApplicationPolicy
 
   def new?
     create?
+  end
+
+  def permitted_attributes
+    attrs = %i[subject description status priority category]
+    attrs << :assignee_id if user.admin? || user.agent?
+    attrs
   end
 
   def update?

@@ -4,6 +4,15 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
   helper_method :current_user
 
+  unless Rails.env.test?
+    rescue_from Pundit::NotAuthorizedError do
+      respond_to do |format|
+        format.html { redirect_to(request.referrer.presence || root_path, alert: "Not authorized.") }
+        format.json { render json: { error: "Forbidden" }, status: :forbidden }
+      end
+    end
+  end
+
   def current_user
     @current_user ||= User.find_by(id: session[:user_id])
   end
