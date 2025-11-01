@@ -1,12 +1,10 @@
+# db/seeds.rb
+
 # This file should ensure the existence of records required to run the application in every environment (production,
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+
+# === Bootstrap a sysadmin ===
 user = User.find_or_initialize_by(
   provider: "google_oauth2",
   uid:      "keeganasmith2003" # keep stable so it's idempotent
@@ -19,26 +17,20 @@ user.assign_attributes(
   role:     :sysadmin
 )
 
-# (Optional) if you want seed tokens for local testing:
-# user.access_token  = "seed-access-token"
-# user.refresh_token = "seed-refresh-token"
-# user.access_token_expires_at = 2.hours.from_now
-
 user.save!
 puts "Seeded user: #{user.email} (role: #{user.role})"
 
-
 # === Settings ===
-# Optional: enable round-robin assignment behavior your app checks via Setting.auto_round_robin?
+# Enable round-robin by default for dev/demo; your app checks Setting.auto_round_robin?
 Setting.set("assignment_strategy", "round_robin")
 
 # === Users ===
 # Your User enum is: enum :role, { user: 0, sysadmin: 1, staff: 2 }
 def seed_user!(provider:, uid:, email:, name:, image_url:, role:)
-  user = User.find_or_initialize_by(provider: provider, uid: uid)
-  user.assign_attributes(email: email, name: name, image_url: image_url, role: role)
-  user.save!
-  user
+  u = User.find_or_initialize_by(provider: provider, uid: uid)
+  u.assign_attributes(email: email, name: name, image_url: image_url, role: role)
+  u.save!
+  u
 end
 
 requester  = seed_user!(
@@ -79,14 +71,29 @@ agent2 = seed_user!(
 
 puts "Users seeded: #{User.count}"
 
-# Tip for dev-only mock login (if you have /dev_login/:uid route):
-# Visit /dev_login/user1, /dev_login/user2, /dev_login/agent1, /dev_login/agent2
+# === Teams & Memberships ===
+support = Team.find_or_create_by!(name: "Support") do |t|
+  t.description = "Tier 1 helpdesk"
+end
+ops = Team.find_or_create_by!(name: "Ops") do |t|
+  t.description = "Operations & SRE"
+end
+
+# Ensure memberships so Ticket validation passes (assignee must belong to team)
+TeamMembership.find_or_create_by!(team: support, user: agent1)
+TeamMembership.find_or_create_by!(team: ops,     user: agent2)
+
+# Optional: cross-staff membership if you want them on both teams
+# TeamMembership.find_or_create_by!(team: support, user: agent2)
+# TeamMembership.find_or_create_by!(team: ops,     user: agent1)
+
+puts "Teams seeded: #{Team.count} | Memberships: #{TeamMembership.count}"
 
 # === Tickets ===
 # Valid enums per model:
 # status:   { open: 0, in_progress: 1, on_hold: 2, resolved: 3 }
 # priority: { low: 0, medium: 1, high: 2 }
-# category: must be in Ticket::CATEGORY_OPTIONS = ["Technical Issue","Account Access","Feature Request"]
+# category: must be in Ticket::CATEGORY_OPTIONS
 
 tickets_attrs = [
   {
@@ -95,17 +102,19 @@ tickets_attrs = [
     status:       :on_hold,
     priority:     :high,
     requester:    requester,
-    assignee:     agent1,
+    assignee:     agent1,                  # belongs to Support
+    team:         support,                 # assign to Support team
     category:     "Technical Issue"
   },
   {
     subject:      "Cannot change account password",
     description:  "The password reset link redirects to an expired page.",
     status:       :in_progress,
-    priority:     :medium,              # was :normal → fixed to :medium
+    priority:     :medium,
     requester:    requester,
-    assignee:     agent1,
-    category:     "Account Access"      # was "Authentication" → fixed
+    assignee:     agent1,                  # belongs to Support
+    team:         support,                 # assign to Support team
+    category:     "Account Access"
   },
   {
     subject:      "Feature request: Email notifications for updates",
@@ -113,7 +122,8 @@ tickets_attrs = [
     status:       :open,
     priority:     :low,
     requester:    requester,
-    assignee:     nil,
+    assignee:     nil,                     # unassigned agent
+    team:         support,                 # routed to Support but not yet picked up
     category:     "Feature Request"
   },
   {
@@ -122,17 +132,19 @@ tickets_attrs = [
     status:       :resolved,
     priority:     :high,
     requester:    requester2,
-    assignee:     agent2,
-    category:     "Technical Issue"     # constrained to allowed options
-    # closed_at will be auto-set by before_save since status is :resolved
+    assignee:     agent2,                  # belongs to Ops
+    team:         ops,                     # assign to Ops team
+    category:     "Technical Issue"
+    # closed_at will auto-set due to before_save when resolved?
   },
   {
     subject:      "Resolved: UI glitch on dashboard",
     description:  "Dashboard charts overlapped on Safari; fix deployed.",
     status:       :resolved,
-    priority:     :medium,              # was :normal → fixed to :medium
+    priority:     :medium,
     requester:    requester2,
-    assignee:     agent2,
+    assignee:     agent2,                  # belongs to Ops
+    team:         ops,                     # assign to Ops team
     category:     "Technical Issue"
   }
 ]
@@ -147,8 +159,6 @@ end
 puts "Tickets seeded/updated: #{tickets.size} (Total in DB: #{Ticket.count})"
 
 # === Comments ===
-# Comment model requires: body (presence), visibility (presence, enum { public: 0, internal: 1 }),
-# and belongs_to :author (User), :ticket.
 def seed_comment!(ticket:, author:, body:, visibility:)
   Comment.find_or_create_by!(
     ticket: ticket,
@@ -158,7 +168,6 @@ def seed_comment!(ticket:, author:, body:, visibility:)
   )
 end
 
-# Add a couple of example comments per some tickets (idempotent)
 if tickets.any?
   t1 = tickets.find { |t| t.subject == "App crash on ticket submission" }
   t2 = tickets.find { |t| t.subject == "Cannot change account password" }
@@ -201,5 +210,4 @@ if tickets.any?
 end
 
 puts "Comments seeded (Total in DB: #{Comment.count})"
-
 puts "=============== Seeding complete ==========================="

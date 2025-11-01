@@ -150,11 +150,39 @@ class TicketsController < ApplicationController
 
   def assign
     authorize @ticket, :assign?
+
+    # Raw params
+    team_param     = params.dig(:ticket, :team_id)
+    assignee_param = params.dig(:ticket, :assignee_id)
+
     updates = {}
-    updates[:team_id] = params[:ticket][:team_id] if params.dig(:ticket, :team_id).present?
-    updates[:assignee_id] = params[:ticket][:assignee_id] if params.dig(:ticket, :assignee_id).present?
-    @ticket.update(updates) if updates.any?
-    redirect_to @ticket, notice: "Ticket assignment updated."
+
+    # Apply team if the key is present (even when blank)
+    if params[:ticket].key?(:team_id)
+      updates[:team_id] = team_param.presence # "" -> nil
+    end
+
+    # Apply assignee if the key is present (even when blank)
+    if params[:ticket].key?(:assignee_id)
+      updates[:assignee_id] = assignee_param.presence # "" -> nil
+    end
+
+    # If team is changing but caller didn't include assignee_id,
+    # and current assignee doesn't belong to the new team, clear it to pass validation.
+    if updates.key?(:team_id) && updates[:team_id].present? && !params[:ticket].key?(:assignee_id)
+      new_team = Team.find(updates[:team_id])
+      if @ticket.assignee_id.present? && !new_team.members.exists?(id: @ticket.assignee_id)
+        updates[:assignee_id] = nil
+      end
+    end
+
+    if updates.any? && @ticket.update(updates)
+      redirect_to @ticket, notice: "Ticket assignment updated."
+    else
+      # Show why it failed (e.g., "Assignee must belong to the selected team")
+      message = @ticket.errors.full_messages.to_sentence.presence || "No assignment changes provided."
+      redirect_to @ticket, alert: message
+    end
   end
 
 
