@@ -27,7 +27,18 @@ class Ticket < ApplicationRecord
   after_initialize :set_default_priority, if: :new_record?
   after_initialize :set_default_status, if: :new_record?
 
+  belongs_to :team, optional: true
+
+  validate :assignee_is_member_of_team, if: -> { team_id.present? && assignee_id.present? }
+
+
+
   private
+
+  def assignee_is_member_of_team
+    return if team.members.exists?(id: assignee_id)
+    errors.add(:assignee_id, "must belong to the selected team")
+  end
 
   def set_default_priority
     self.priority ||= :medium

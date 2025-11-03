@@ -11,7 +11,8 @@ class User < ApplicationRecord
   validates :role,  presence: true
 
   before_validation :normalize_email
-
+  has_many :team_memberships, dependent: :destroy
+  has_many :teams, through: :team_memberships
   # Create or update from OmniAuth auth hash (e.g., for "google_oauth2")
   def self.from_omniauth(auth)
     raise ArgumentError, "auth must include provider and uid" unless auth && auth["provider"] && auth["uid"]

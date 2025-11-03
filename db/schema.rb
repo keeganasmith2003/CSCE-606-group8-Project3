@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_20_152900) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_01_120200) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -57,6 +57,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_152900) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "team_memberships", force: :cascade do |t|
+    t.integer "team_id", null: false
+    t.integer "user_id", null: false
+    t.integer "role", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["team_id", "user_id"], name: "index_team_memberships_on_team_id_and_user_id", unique: true
+    t.index ["user_id"], name: "index_team_memberships_on_user_id"
+  end
+
+  create_table "teams", force: :cascade do |t|
+    t.string "name", null: false
+    t.text "description"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_teams_on_name", unique: true
+  end
+
   create_table "tickets", force: :cascade do |t|
     t.string "subject"
     t.text "description"
@@ -72,9 +90,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_152900) do
     t.text "approval_reason"
     t.integer "approver_id"
     t.datetime "approved_at"
+    t.integer "team_id"
     t.index ["approver_id"], name: "index_tickets_on_approver_id"
     t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
     t.index ["requester_id"], name: "index_tickets_on_requester_id"
+    t.index ["team_id"], name: "index_tickets_on_team_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -96,6 +116,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_20_152900) do
 
   add_foreign_key "comments", "tickets"
   add_foreign_key "comments", "users", column: "author_id"
+  add_foreign_key "team_memberships", "teams"
+  add_foreign_key "team_memberships", "users"
+  add_foreign_key "tickets", "teams"
   add_foreign_key "tickets", "users", column: "approver_id"
   add_foreign_key "tickets", "users", column: "assignee_id"
   add_foreign_key "tickets", "users", column: "requester_id"

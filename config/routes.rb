@@ -11,6 +11,9 @@ Rails.application.routes.draw do
     end
     resources :comments, only: :create
   end
+  resources :teams do
+    resources :team_memberships, only: [ :create, :destroy ]
+  end
   get    "/login",  to: "sessions#new"
   delete "/logout", to: "sessions#destroy"
   match  "/auth/:provider/callback", to: "sessions#create", via: [ :get, :post ]

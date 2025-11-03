@@ -1,0 +1,23 @@
+<!-- app/views/teams/index.html.erb -->
+<h1>Teams</h1>
+
+<% if policy(Team).create? %>
+  <%= link_to "New Team", new_team_path, class: "btn btn-primary" %>
+<% end %>
+
+<table class="table">
+  <thead><tr><th>Name</th><th>Members</th><th></th></tr></thead>
+  <tbody>
+    <% @teams.each do |team| %>
+      <tr>
+        <td><%= link_to team.name, team %></td>
+        <td><%= team.members.count %></td>
+        <td>
+          <% if policy(team).update? %>
+            <%= link_to "Edit", edit_team_path(team), class: "btn btn-sm" %>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

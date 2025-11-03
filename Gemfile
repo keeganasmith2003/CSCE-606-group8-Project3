@@ -65,12 +65,13 @@ group :test do
   # Use system testing [https://guides.rubyonrails.org/testing.html#system-testing]
   gem "cucumber-rails", require: false   # Cucumber integration for Rails
   gem "capybara"                         # acceptance/integration testing for browser flows
-  gem "selenium-webdriver"               # drive a browser for feature tests
-  gem "webdrivers"                       # automatically manages chromedriver/geckodriver
+  gem "webdrivers"
+  gem "selenium-webdriver", ">= 4.6"                       # automatically manages chromedriver/geckodriver
   gem "database_cleaner-active_record"   # keeps test DB clean between scenarios (optional)
   gem "launchy"
   gem "simplecov", require: false
   gem "rack_session_access"
+  gem "pundit-matchers"
 end
 gem "pg", "~> 1.5"
 

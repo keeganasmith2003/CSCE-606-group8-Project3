@@ -1,0 +1,40 @@
+<!-- app/views/teams/show.html.erb -->
+<h1><%= @team.name %></h1>
+<p><%= @team.description %></p>
+
+<h2>Members</h2>
+<ul>
+  <% @memberships.each do |m| %>
+    <li>
+      <%= m.user.name || m.user.email %>
+      <% if m.manager? %>(manager)<% end %>
+      <% if policy(TeamMembership).destroy? %>
+        <%= button_to "Remove",
+              team_team_membership_path(@team, m),
+              method: :delete,
+              form: { data: { turbo_confirm: "Remove member?" } },
+              class: "btn btn-danger btn-sm" %>
+      <% end %>
+    </li>
+  <% end %>
+</ul>
+
+<% if policy(TeamMembership).create? %>
+  <h3>Add Member</h3>
+  <%= form_with url: team_team_memberships_path(@team), scope: :team_membership, local: true do |f| %>
+    <div class="field">
+      <%= f.label :user_id, "User" %>
+      <%= f.collection_select :user_id, User.order(:name), :id, :name %>
+    </div>
+    <div class="field">
+      <%= f.label :role %>
+      <%= f.select :role, TeamMembership.roles.keys.map { |r| [r.titleize, r] } %>
+    </div>
+    <%= f.submit "Add", class: "btn btn-primary" %>
+  <% end %>
+<% end %>
+
+<div class="mt">
+  <%= link_to "Edit", edit_team_path(@team), class: "btn" if policy(@team).update? %>
+  <%= link_to "Back", teams_path, class: "btn btn-secondary" %>
+</div>

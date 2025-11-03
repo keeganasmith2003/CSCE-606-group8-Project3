@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe TicketPolicy do
   let(:requester) { FactoryBot.create(:user, role: :user) }
-  let(:agent) { FactoryBot.create(:user, role: :staff) }
+  let(:staff) { FactoryBot.create(:user, role: :staff) }
   let(:admin) { FactoryBot.create(:user, role: :sysadmin) }
   let(:ticket) { FactoryBot.create(:ticket, requester: requester) }
 
@@ -34,8 +34,8 @@ RSpec.describe TicketPolicy do
     end
   end
 
-  context 'when user is agent' do
-    let(:user) { agent }
+  context 'when user is staff' do
+    let(:user) { staff }
 
     it { expect(subject.permit?(:index)).to be true }
     it { expect(subject.permit?(:show)).to be true }

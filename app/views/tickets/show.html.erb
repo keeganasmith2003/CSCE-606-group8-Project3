@@ -100,8 +100,14 @@
       <div class="assign-card">
         <%= form_with(model: @ticket, url: assign_ticket_path(@ticket), method: :patch, local: true) do |form| %>
           <div class="field">
+            <%= form.label :team_id, "Assign to team:" %>
+            <%= form.collection_select :team_id, Team.order(:name), :id, :name, include_blank: "Unassigned" %>
+          </div>
+
+          <div class="field">
             <%= form.label :assignee_id, "Assign to agent:" %>
-            <%= form.collection_select :assignee_id, User.where(role: [:staff, :agent]), :id, :name, include_blank: "Unassigned" %>
+            <% team_members = @ticket.team ? @ticket.team.members.order(:name) : User.where(role: [:staff, :agent]).order(:name) %>
+            <%= form.collection_select :assignee_id, team_members, :id, :name, include_blank: "Unassigned" %>
           </div>
           <div class="actions-row">
             <%= form.submit "Assign", class: "btn" %>
