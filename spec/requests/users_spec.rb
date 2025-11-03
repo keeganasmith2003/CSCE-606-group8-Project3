@@ -103,6 +103,13 @@ RSpec.describe "Users", type: :request do
         expect(response).to redirect_to(user_path(user))
         expect(user.reload.name).to eq("New")
       end
+
+      it "renders errors with :unprocessable_content for invalid params" do
+        # Make email invalid (blank) to trigger validation errors
+        patch user_path(user), params: { user: { email: "" } }
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.body).to include("prohibited this user from being saved:")
+      end
     end
 
     context "when non-sysadmin" do

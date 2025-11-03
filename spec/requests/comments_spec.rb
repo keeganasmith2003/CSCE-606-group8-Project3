@@ -59,5 +59,18 @@ RSpec.describe "Comments", type: :request do
         post ticket_comments_path(ticket), params: { comment: { body: "Closing remark" } }
       }.to raise_error(Pundit::NotAuthorizedError)
     end
+
+    it "on save failure sets flash alert and redirects with :unprocessable_content" do
+      sign_in(agent) # ensure policy passes
+
+      allow_any_instance_of(Comment).to receive(:save).and_return(false)
+      fake_errors = double(full_messages: [ "Body can't be blank" ])
+      allow_any_instance_of(Comment).to receive(:errors).and_return(fake_errors)
+
+      post ticket_comments_path(ticket), params: { comment: { body: "" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(flash[:alert]).to include("Body can't be blank")
+    end
   end
 end

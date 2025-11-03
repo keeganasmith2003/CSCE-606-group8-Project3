@@ -3,8 +3,20 @@
 # This file should ensure the existence of records required to run the application in every environment (production,
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
+#
+# Example:
+#
+#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
+#     MovieGenre.find_or_create_by!(name: genre_name)
+#   end
 
-# === Bootstrap a sysadmin ===
+# Flush existing data to ensure a clean reseed (respect FK constraints)
+puts "Flushing existing data..."
+Comment.delete_all
+Ticket.delete_all
+Setting.delete_all
+User.delete_all
+
 user = User.find_or_initialize_by(
   provider: "google_oauth2",
   uid:      "keeganasmith2003" # keep stable so it's idempotent
@@ -67,6 +79,34 @@ agent2 = seed_user!(
   name:      "Support Agent 2",
   image_url: "https://example.com/support_agent2.png",
   role:      :staff
+)
+
+# Additional sample users
+requester3 = seed_user!(
+  provider:  "google_oauth2",
+  uid:       "user3",
+  email:     "dummy.requester3@example.com",
+  name:      "Dummy Requester 3",
+  image_url: "https://example.com/requester3.png",
+  role:      :user
+)
+
+agent3 = seed_user!(
+  provider:  "google_oauth2",
+  uid:       "agent3",
+  email:     "support.agent3@example.com",
+  name:      "Support Agent 3",
+  image_url: "https://example.com/support_agent3.png",
+  role:      :staff
+)
+
+admin2 = seed_user!(
+  provider:  "google_oauth2",
+  uid:       "admin2",
+  email:     "admin2@example.com",
+  name:      "Admin User 2",
+  image_url: "https://example.com/admin2.png",
+  role:      :sysadmin
 )
 
 puts "Users seeded: #{User.count}"
@@ -146,6 +186,33 @@ tickets_attrs = [
     assignee:     agent2,                  # belongs to Ops
     team:         ops,                     # assign to Ops team
     category:     "Technical Issue"
+  },
+  {
+    subject:      "Login page loads slowly",
+    description:  "Initial load of the login page takes ~8 seconds intermittently.",
+    status:       :open,
+    priority:     :medium,
+    requester:    requester3,
+    assignee:     agent3,
+    category:     "Technical Issue"
+  },
+  {
+    subject:      "Feature request: Dark mode for dashboard",
+    description:  "Please add a dark theme option for night-time use.",
+    status:       :in_progress,
+    priority:     :low,
+    requester:    requester3,
+    assignee:     nil,
+    category:     "Feature Request"
+  },
+  {
+    subject:      "Account locked after password attempts",
+    description:  "Got locked after two attempts, not five as expected.",
+    status:       :open,
+    priority:     :high,
+    requester:    requester2,
+    assignee:     agent3,
+    category:     "Account Access"
   }
 ]
 
@@ -205,6 +272,49 @@ if tickets.any?
       author: agent1,
       body:   "Deployed fix. Please retry the reset link.",
       visibility: :public
+    )
+  end
+
+  # Additional comments for other sample tickets
+  t3 = tickets.find { |t| t.subject == "Login page loads slowly" }
+  if t3
+    seed_comment!(
+      ticket: t3,
+      author: requester3,
+      body:   "Happens more on mobile network than Wi‑Fi.",
+      visibility: :public
+    )
+    seed_comment!(
+      ticket: t3,
+      author: agent3,
+      body:   "Checking CDN edge logs for high TTFB spikes.",
+      visibility: :internal
+    )
+  end
+
+  t4 = tickets.find { |t| t.subject == "Feature request: Dark mode for dashboard" }
+  if t4
+    seed_comment!(
+      ticket: t4,
+      author: requester3,
+      body:   "A schedule to switch based on system theme would be great.",
+      visibility: :public
+    )
+  end
+
+  t5 = tickets.find { |t| t.subject == "Account locked after password attempts" }
+  if t5
+    seed_comment!(
+      ticket: t5,
+      author: requester2,
+      body:   "I can’t log back in even after 30 minutes.",
+      visibility: :public
+    )
+    seed_comment!(
+      ticket: t5,
+      author: agent3,
+      body:   "Lockout threshold misconfigured; preparing hotfix.",
+      visibility: :internal
     )
   end
 end

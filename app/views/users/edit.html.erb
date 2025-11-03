@@ -1,5 +1,16 @@
-<h1>Edit User</h1>
+<div class="container">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <%= link_to "Users", users_path %>
+    <span aria-hidden="true">›</span>
+    <span>Editing User</span>
+  </nav>
 
-<%= render "form", user: @user %>
+  <h1>Editing User</h1>
 
-<p><%= link_to "Back", user_path(@user) %></p>
+  <%= render "form", user: @user %>
+
+  <div class="page-actions">
+    <%= link_to "Show", user_path(@user), class: "btn" %>
+    <%= link_to "Back", users_path, class: "btn" %>
+  </div>
+</div>

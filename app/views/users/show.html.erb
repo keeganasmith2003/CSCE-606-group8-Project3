@@ -1,41 +1,61 @@
-<h1>User #<%= @user.id %></h1>
+<div class="container user-show">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <%= link_to "Users", users_path %>
+    <span aria-hidden="true">›</span>
+    <span>User #<%= @user.id %></span>
+  </nav>
 
-<dl class="details">
-  <dt>Email</dt>
-  <dd><%= mail_to @user.email %></dd>
+  <h1>User #<%= @user.id %></h1>
 
-  <dt>Name</dt>
-  <dd><%= @user.name.presence || "—" %></dd>
+  <table class="details-table">
+    <tbody>
+      <tr>
+        <th scope="row">Email</th>
+        <td><%= mail_to @user.email %></td>
+      </tr>
+      <tr>
+        <th scope="row">Name</th>
+        <td><%= @user.name.presence || "—" %></td>
+      </tr>
+      <tr>
+        <th scope="row">Role</th>
+        <td><%= @user.role %></td>
+      </tr>
+      <tr>
+        <th scope="row">Provider</th>
+        <td><%= @user.provider %></td>
+      </tr>
+      <tr>
+        <th scope="row">UID</th>
+        <td><%= @user.uid %></td>
+      </tr>
+      <tr>
+        <th scope="row">Image</th>
+        <td>
+          <% if @user.image_url.present? %>
+            <img src="<%= @user.image_url %>" alt="User image" style="max-height:80px">
+          <% else %>
+            —
+          <% end %>
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Access Token Expires At</th>
+        <td><%= @user.access_token_expires_at&.to_s(:long) || "—" %></td>
+      </tr>
+      <tr>
+        <th scope="row">Created</th>
+        <td><%= l @user.created_at, format: :long %></td>
+      </tr>
+      <tr>
+        <th scope="row">Updated</th>
+        <td><%= l @user.updated_at, format: :long %></td>
+      </tr>
+    </tbody>
+  </table>
 
-  <dt>Role</dt>
-  <dd><%= @user.role %></dd>
-
-  <dt>Provider</dt>
-  <dd><%= @user.provider %></dd>
-
-  <dt>UID</dt>
-  <dd><%= @user.uid %></dd>
-
-  <dt>Image</dt>
-  <dd>
-    <% if @user.image_url.present? %>
-      <img src="<%= @user.image_url %>" alt="User image" style="max-height:80px">
-    <% else %>
-      —
-    <% end %>
-  </dd>
-
-  <dt>Access Token Expires At</dt>
-  <dd><%= @user.access_token_expires_at&.to_s(:long) || "—" %></dd>
-
-  <dt>Created</dt>
-  <dd><%= l @user.created_at, format: :long %></dd>
-
-  <dt>Updated</dt>
-  <dd><%= l @user.updated_at, format: :long %></dd>
-</dl>
-
-<p class="actions">
-  <%= link_to "Edit", edit_user_path(@user), class: "btn" %>
-  <%= link_to "Back", users_path, class: "btn" %>
-</p>
+  <div class="page-actions">
+    <%= link_to "Edit", edit_user_path(@user), class: "btn" %>
+    <%= link_to "Back", users_path, class: "btn" %>
+  </div>
+</div>

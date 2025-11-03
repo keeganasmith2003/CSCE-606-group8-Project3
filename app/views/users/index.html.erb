@@ -1,42 +1,55 @@
-<h1>Users</h1>
+<div class="users-index container">
+  <div class="headline-bar">
+    <h1>Users</h1>
+    <div class="headline-right">
+      <%= link_to "New User", new_user_path, class: "btn btn-primary" %>
+    </div>
+  </div>
 
-<p>
-  <%= link_to "New User", new_user_path, class: "btn" %>
-</p>
-
-<table class="table">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Email</th>
-      <th>Name</th>
-      <th>Provider</th>
-      <th>UID</th>
-      <th>Role</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @users.each do |user| %>
-      <tr id="<%= dom_id(user) %>">
-        <td><%= user.id %></td>
-        <td><%= mail_to user.email %></td>
-        <td><%= user.name %></td>
-        <td><%= user.provider %></td>
-        <td><%= user.uid %></td>
-        <td><%= user.role %></td>
-        <% if current_user&.sysadmin? %>
-        <td class="actions">
-          <%= link_to "Show", user_path(user) %> |
-          <%= link_to "Edit", edit_user_path(user) %> |
-          <%= button_to "Delete", user_path(user), method: :delete, data: { confirm: "Delete this user?" } %>
-          <!-- If you prefer a link with Turbo:
-
-          <%= link_to "Delete", user_path(user), data: { turbo_method: :delete, turbo_confirm: "Delete this user?" } %>
-          -->
-        </td>
-        <% end %>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+  <% if @users.blank? %>
+    <div class="empty-state">
+      <p>No users found.</p>
+      <%= link_to "Create your first user", new_user_path, class: "btn btn-primary" %>
+    </div>
+  <% else %>
+    <div class="table-wrap">
+      <table class="table users-table" aria-describedby="users-caption">
+        <caption id="users-caption" class="visually-hidden">Users list</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Email</th>
+            <th scope="col">Name</th>
+            <th scope="col">Provider</th>
+            <th scope="col">UID</th>
+            <th scope="col">Role</th>
+            <% if current_user&.sysadmin? %><th scope="col" class="min-col">Actions</th><% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @users.each do |user| %>
+            <tr id="<%= dom_id(user) %>">
+              <td><%= user.id %></td>
+              <td><%= mail_to user.email %></td>
+              <td><%= user.name.presence || "—" %></td>
+              <td><%= user.provider %></td>
+              <td class="mono"><%= user.uid %></td>
+              <td>
+                <span class="role-badge role-<%= user.role %>"><%= user.role %></span>
+              </td>
+              <% if current_user&.sysadmin? %>
+                <td class="actions">
+                  <div class="actions-row">
+                    <%= link_to "Show", user_path(user), class: "btn btn-outline" %>
+                    <%= link_to "Edit", edit_user_path(user), class: "btn" %>
+                    <%= button_to "Delete", user_path(user), method: :delete, data: { confirm: "Delete this user?" }, class: "btn btn-danger-outline" %>
+                  </div>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
