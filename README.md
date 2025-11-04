@@ -120,8 +120,6 @@ This guide walks an end-user through the common flows in the application (login,
 
 - Click "New Ticket" or the "Create Ticket" button on the dashboard.
 - Fill in required fields: title, description, priority, and any metadata your deployment requires (e.g., project or category).
-- Optionally attach files using the Attachments control; ActiveStorage will handle uploads.
-- Choose whether the ticket is public or internal (if that option is shown to you). Requesters normally create public tickets; internal-only visibility is typically reserved for staff/agents.
 - Submit the form — the ticket will appear in the Tickets list.
 
 4. Viewing and commenting
@@ -140,6 +138,7 @@ This guide walks an end-user through the common flows in the application (login,
 
 - Certain tickets may require approval. Use the Approve/Reject controls visible to staff when the ticket's workflow requires it.
 - Approval actions record the approver and timestamp so actions are auditable.
+- When creating/editing tickets, you can add attachments for evidence/workflows.
 
 7. Teams and memberships (Admin)
 
@@ -242,7 +241,7 @@ This section shows the minimal steps to get the app running locally and an examp
 ### 2️⃣ Local installation
 
 ```bash
-git clone <repo-url>
+git clone <https://github.com/tamu-edu-students/CSCE-606-group6-Project2.git>
 cd Ticketing-System
 bundle install
 rails db:migrate
