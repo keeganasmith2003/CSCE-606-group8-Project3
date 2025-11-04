@@ -321,5 +321,21 @@ input, select, textarea { font-size: 1rem; }
 /* Keep existing button styles; just align actions neatly */
 .users-index .actions-row { display: inline-flex; gap: .4rem; flex-wrap: wrap; justify-content: center; }
 
+/* Teams pages */
+.teams-index { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+.team-card { border: 1px solid #eee; border-radius: 6px; padding: 0.75rem 1rem; background: #fff; }
+.team-card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.team-card__title a { text-decoration: none; color: #111; }
+.team-card__title a:hover { text-decoration: underline; }
+.team-card__meta { color: #555; font-size: 0.95rem; }
+.team-card__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.team-show { max-width: 60rem; margin: 1.5rem auto; padding: 0 1rem; }
+.team-members { margin-top: 1rem; border: 1px solid #eee; border-radius: 6px; background: #fff; }
+.team-members .member-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-top: 1px solid #f5f5f5; }
+.team-members .member-row:first-child { border-top: 0; }
+.team-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.team-form .actions { margin-top: 0.5rem; }
+
 /* a11y helpers */
 .visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }

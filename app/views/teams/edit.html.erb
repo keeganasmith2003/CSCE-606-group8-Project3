@@ -1,3 +1,8 @@
 <!-- app/views/teams/edit.html.erb -->
-<h1>Edit Team</h1>
-<%= render "form", team: @team %>
+<div class="team-show">
+  <h1>Edit Team</h1>
+  <%= render "form", team: @team %>
+  <div class="page-actions">
+    <%= link_to "Back to teams", teams_path, class: "btn btn-secondary" %>
+  </div>
+</div>
