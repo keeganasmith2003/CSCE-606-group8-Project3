@@ -32,6 +32,15 @@ RSpec.describe TicketPolicy do
     it 'does not permit status updates' do
       expect(subject.permitted_attributes).not_to include(:status)
     end
+
+    it 'does not permit assignment or approval fields' do
+      attrs = subject.permitted_attributes
+      expect(attrs).not_to include(:assignee_id)
+      expect(attrs).not_to include(:team_id)
+      expect(attrs).not_to include(:approval_status)
+      expect(attrs).not_to include(:approval_reason)
+      expect(attrs).not_to include({ attachments: [] })
+    end
   end
 
   context 'when user is staff' do
@@ -47,6 +56,15 @@ RSpec.describe TicketPolicy do
     it { expect(subject.permit?(:destroy)).to be false }
     it { expect(subject.permit?(:close)).to be false }
     it { expect(subject.permitted_attributes).to include(:status) }
+
+    it 'permits assignment, approval, and attachments' do
+      attrs = subject.permitted_attributes
+      expect(attrs).to include(:assignee_id)
+      expect(attrs).to include(:team_id)
+      expect(attrs).to include(:approval_status)
+      expect(attrs).to include(:approval_reason)
+      expect(attrs).to include({ attachments: [] })
+    end
   end
 
   context 'when user is admin' do
