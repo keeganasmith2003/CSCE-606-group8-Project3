@@ -1,11 +1,10 @@
-
 # Ticketing System
 
-## Architecture
+## Lo-Fi Architecture
 
-Ticketing System is a monolithic Rails application that handles ticket creation, assignment, commenting, approval flows, team-based visibility, and user management. The architecture below shows how requests flow from the browser through controllers, to models and the database, and highlights background/async components where applicable.
+Ticketing System is a monolithic Rails application that handles ticket creation, assignment, commenting, approval flows, team-based visibility, and user management. The diagram below is a simple lo-fi view of how requests flow through the app.
 
-```
+```text
 +----------------------+     +----------------------------+     +--------------------+
 |  Web Browser / UI    | <-> | Rails Controllers & Views  | <-> |  Frontend Assets   |
 |  (ERB, CSS, JS,      |     |  (Tickets, Users, Teams)   |     |  (Turbo/Stimulus)  |
@@ -23,69 +22,11 @@ Ticketing System is a monolithic Rails application that handles ticket creation,
                                   +-----------+-----------+
                                               |
                                               v
-# Ticketing System
-
-An internal ticketing application built with Ruby on Rails. Users sign in via Google OAuth2, create and comment on tickets, manage teams and memberships, and staff members can approve or reject tickets.
-
----
+```
 
 ## Architecture
 
 The architecture diagram (rendered image) shows the major pieces and how requests flow through the system. See `docs/project2architecture_diagram.png` in the `docs/` folder.
-
-![Architecture diagram](docs/project2architecture_diagram.png)
-
-### Architecture Decision Records (ADRs)
-
-ADRs capture high-level technical decisions. They live in `docs/adr/`.
-
-| ADR # | Title |
-|---|---|
-| ADR-001 | Monolithic Rails 8 architecture |
-| ADR-002 | Authentication with Google OAuth2 (OmniAuth) |
-| ADR-003 | Database: SQLite (dev/test) + PostgreSQL (prod) |
-| ADR-004 | Deployment: Docker + Heroku/Cloud options (proposed) |
-| ADR-005 | Testing: RSpec + Cucumber |
-| ADR-006 | Attachments: ActiveStorage |
-| ADR-007 | Approval workflow & Team visibility |
-| ADR-008 | CI pipeline (proposed) |
-| ADR-009 | Mailers & notifications (proposed) |
-| ADR-010 | Frontend: ERB + Turbo + Stimulus |
-
----
-
-## Class Diagram
-
-Main domain models and relationships are represented in the class diagram (rendered image in `docs/`).
-
-![Class diagram](docs/project2_class_diagram.png)
-
----
-
-## Components
-
-### Frontend
-- Server-rendered views (ERB) with Turbo and Stimulus for interactivity.
-- Key pages: Home/Dashboard, Tickets (index/new/edit/show), Users, Teams, Sessions (login).
-
-### Backend
-- Controllers: coordinate requests and authorization (Pundit) and render views or JSON.
-- Models: `User`, `Ticket`, `Comment`, `Team`, `TeamMembership`, `Setting`.
-- Policies: `TicketPolicy`, `TeamPolicy`, `CommentPolicy`, `TeamMembershipPolicy`.
-
-### Database
-- Default development/test DB: SQLite3 (configured in `config/database.yml`, DB files under `storage/`).
-- Production: PostgreSQL is recommended (Gemfile includes `pg`).
-
-### External integrations
-- Google OAuth2 (OmniAuth + omniauth-google-oauth2)
-# Ticketing System
-
-Ticketing System is a monolithic Ruby on Rails application for internal ticket tracking: users sign in with Google OAuth2, create and comment on tickets, manage teams and memberships, and staff can approve or reject tickets.
-
-## Architecture
-
-The architecture diagram shows the major pieces and how requests flow through the system. See `docs/project2architecture_diagram.png` in the `docs/` folder.
 
 ![Architecture diagram](docs/project2architecture_diagram.png)
 
