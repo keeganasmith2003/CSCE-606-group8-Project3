@@ -1,16 +1,21 @@
-# ADR-002: Authentication with Google OAuth2 (OmniAuth)
+# ADR-002: Authentication — Devise + OmniAuth (Google/GitHub)
 
-Status: accepted
+Status: accepted (tooling present)
 
 Context
 -------
-The app needs simple and secure user authentication. Managing passwords for users adds development and security overhead.
+Authentication should be simple for users and secure for demos and internal use. The project prefers delegating identity to OAuth providers for reduced password handling and easier onboarding.
 
 Decision
 --------
-Use OmniAuth with the `omniauth-google-oauth2` strategy to authenticate users via Google accounts. New users are created on first login using data from the provider.
+Use Devise for user/session management plus OmniAuth strategies (Google and optionally GitHub) for OAuth login. In development and CI, provide mocked OAuth callbacks to allow deterministic tests.
 
 Consequences
 ------------
-- Pros: Delegates authentication to Google (less password management), simpler dev experience for course demos.
-- Cons: Requires configuring OAuth credentials; users must have Google accounts. Consider fallback for non-Google users if required.
+- Pros: Devise provides battle-tested session management, recoverable passwords (if needed), and integrations that make it easier to manage user lifecycle.
+- Pros: OmniAuth (Google/GitHub) simplifies onboarding and reduces password surface area.
+- Cons: Adds Devise configuration and migrations; OAuth providers require client credentials and redirect setup.
+
+Notes
+-----
+If Devise is not already present in the codebase, adding it should be done carefully to avoid conflicting user models; alternatively, a lightweight custom authentication plus OmniAuth may be used. For CI, mock OAuth flows to avoid flaky external calls.

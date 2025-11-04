@@ -28,7 +28,7 @@ Ticketing System is a monolithic Rails application that handles ticket creation,
 
 The architecture diagram (rendered image) shows the major pieces and how requests flow through the system. See `docs/project2architecture_diagram.png` in the `docs/` folder.
 
-![Architecture diagram](docs/project2architecture_diagram.png)
+![Architecture diagram](/home/mihir/Downloads/Gemini_Generated_Image_otit34otit34otit.png)
 
 ### Architecture Decision Records (ADRs)
 
@@ -36,16 +36,16 @@ ADRs capture high-level technical decisions. They live in `docs/adr/`.
 
 | ADR # | Title |
 |---|---|
-| ADR-001 | Monolithic Rails 8 architecture |
-| ADR-002 | Authentication with Google OAuth2 (OmniAuth) |
-| ADR-003 | Database: SQLite (dev/test) + PostgreSQL (prod) |
-| ADR-004 | Deployment: Heroku (primary), Docker optional |
-| ADR-005 | Testing: RSpec + Cucumber (tooling present) |
+| ADR-001 | Monolithic Rails 8 architecture (Hotwire) |
+| ADR-002 | Authentication: Devise + OmniAuth (Google/GitHub) |
+| ADR-003 | Database: PostgreSQL (prod), SQLite for local dev; ActiveStorage for attachments |
+| ADR-004 | Deployment: Kamal + Docker on Heroku |
+| ADR-005 | Testing: RSpec, FactoryBot, Cucumber |
 | ADR-006 | Attachments: ActiveStorage |
-| ADR-007 | Approval workflow & Team visibility |
+| ADR-007 | Assignment workflow: Manual + Round-Robin |
 | ADR-008 | CI pipeline (proposed / not configured) |
 | ADR-009 | Mailers (not implemented) |
-| ADR-010 | Frontend: ERB + Turbo + Stimulus |
+| ADR-010 | Frontend: ERB + Turbo + Stimulus (Hotwire) |
 
 ---
 
@@ -57,30 +57,56 @@ Main domain models and relationships are represented in the class diagram (rende
 
 ---
 
-## Components
+## System architecture
 
-### Frontend
-- Server-rendered views (ERB) with Turbo and Stimulus for interactivity.
-- Key pages: Home/Dashboard, Tickets (index/new/edit/show), Users, Teams, Sessions (login).
+Key points:
+- Google/GitHub OAuth login (OmniAuth) for quick access
+- Ticket CRUD with status and priority enums
+- Manual and round-robin ticket assignment modes
+- Public vs internal comments for collaboration
+- Minimal but functional roles: requester, agent, admin
 
-### Backend
-- Controllers: coordinate requests and authorization (Pundit) and render views or JSON.
-- Models: `User`, `Ticket`, `Comment`, `Team`, `TeamMembership`, `Setting`.
-- Policies: `TicketPolicy`, `TeamPolicy`, `CommentPolicy`, `TeamMembershipPolicy`.
+- Monolithic Rails 8 MVC with Hotwire (Turbo + Stimulus)
+- PostgreSQL (production) and ActiveStorage for attachments
+- Devise + OmniAuth for authentication
+- Pundit for authorization and role management
+- Deployed via Kamal + Docker on Heroku
 
-### Database
-- Default development/test DB: SQLite3 (configured in `config/database.yml`, DB files under `storage/`).
-- Production: PostgreSQL is recommended (Gemfile includes `pg`).
+## Data model overview
 
-### External integrations
-- Google OAuth2 (OmniAuth + omniauth-google-oauth2)
-- Dotenv for environment variables
-- Pundit for authorization
+- Core relationships: User ↔ Ticket ↔ Comment
+- Teams & TeamMemberships organize agents and scoping
+- `Setting` model stores assignment strategy (manual vs round-robin) and feature toggles
+- Enum fields for role, ticket status, and comment visibility ensure consistency
+- Proper database indexes are recommended on foreign keys and enum fields for fast lookups and integrity
 
-### Testing & QA
-- RSpec for unit/model/policy/request specs
-- Cucumber + Capybara for high-level feature tests
-- Brakeman and RuboCop are included in the Gemfile for security and linting
+## Assignment workflow
+
+- Manual assignment: Admins and Agents can assign tickets from the UI dropdown
+- Auto round-robin: toggled in `Settings` and enabled for fair rotation among active agents
+- Rotation state is persisted (e.g., keep last-assigned index) to ensure balanced distribution and traceability
+- For MVP this is implemented synchronously — no background jobs required
+
+## Security & access control
+
+- Devise + OmniAuth handle authentication (with mocked callbacks for CI)
+- Pundit policies define per-role permissions (requester/agent/admin)
+- CSRF protection enabled by Rails; OAuth logs should be filtered for secrets
+- Internal comments are restricted to agents and admins via Pundit
+- Strict input validations and DB constraints enforce data integrity
+
+## UI / UX
+
+- Server-rendered responsive layout with clear navigation and role-aware navbar
+- Single ticket page combines status, comments, attachments, and assignment controls
+- Focus on accessibility and lightweight JS—app remains usable with minimal JS
+
+## Testing & deployment
+
+- RSpec + FactoryBot for unit and policy tests
+- Cucumber (with Capybara) for end-to-end acceptance tests
+- OAuth callbacks are mocked in CI to improve reliability
+- Deploy via Kamal + Docker to Heroku; dotenv used for secrets management and SSL is enforced where possible
 
 ---
 

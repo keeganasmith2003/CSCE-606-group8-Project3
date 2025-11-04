@@ -4,13 +4,18 @@ Status: accepted
 
 Context
 -------
-Tickets need file attachments for screenshots or logs. Rails provides ActiveStorage to manage blobs and files.
+Tickets and comments may include file attachments (screenshots, logs). The application should support simple local uploads in development and cloud-backed storage in production.
 
 Decision
 --------
-Use ActiveStorage for handling attachments (local disk in dev, cloud-backed storage like S3 in production if enabled).
+Use Rails ActiveStorage for attachments. Configure local disk service for development and a cloud provider (S3-compatible) for production. Keep attachment handling simple (size limits, content-type validation) to reduce abuse.
 
 Consequences
 ------------
-- Pros: Built-in Rails approach, supports variants and direct uploads.
-- Cons: Requires storage service configuration for production; migration to S3 recommended for multi-replica production environments.
+- Pros: Direct integration with Rails, support for variants and direct uploads.
+- Pros: Switching storage backends (local ↔ cloud) is straightforward via `config/storage.yml`.
+- Cons: Cloud storage introduces credentials and cost; document required env vars and IAM/policy expectations.
+
+Notes
+-----
+Ensure ActiveStorage migrations are applied and `config/storage.yml` includes both `local` and `amazon` (or S3-compatible) services. Use signed URLs for secure access where appropriate.

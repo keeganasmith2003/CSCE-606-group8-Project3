@@ -1,21 +1,21 @@
-# ADR-004: Deployment — Heroku (current) and Docker (optional)
+# ADR-004: Deployment — Kamal + Docker on Heroku
 
-Status: accepted (Heroku primary)
+Status: accepted
 
 Context
 -------
-The application was developed and deployed using Heroku in course/demo contexts. The codebase includes `kamal` and other deployment helpers that could enable containerized or more advanced deployment workflows, but the active deployment path used by the team has been Heroku.
+We want repeatable, consistent deployments for demos and cloud hosting. The repository includes `kamal` which supports containerized deployments and there is value in having parity between local and production environments.
 
 Decision
 --------
-Treat Heroku as the primary deployment platform for this project. Docker/containerized deployment is considered optional and not currently used in the project's delivery pipeline.
+Adopt Kamal + Docker as the deployment mechanism and target Heroku as the hosting platform for demos and course usage. Provide Dockerfile and Kamal configuration to build and push container images, and ensure Heroku is configured to receive Docker-based deployments.
 
 Consequences
 ------------
-- Pros: Simple deployment path (Heroku) and lower operational overhead for course/demo deployments.
-- Cons: Less parity if production environments require containers; if you later adopt Docker you should add container images and CI/CD to exercise them.
+- Pros: Containerization produces reproducible images and helps with parity between dev and prod. Kamal simplifies deploying containers to cloud platforms.
+- Cons: Adds build complexity and developer tooling (Docker). Provide clear docs and convenience scripts so students can deploy without deep ops knowledge.
 
 Notes
 -----
-- The repository includes `kamal` which can support containerized deployments; consider adding Docker/CICD support later if required.
-- The `config/database.yml` currently uses SQLite for local development; for Heroku deploys ensure you enable a Postgres addon and update `config/database.yml` for production or set `DATABASE_URL` appropriately.
+- Ensure `config/database.yml` and ActiveStorage are configured for production Postgres and cloud storage respectively.
+- Provide a simple Heroku deploy guide that uses container images, or allow the existing Heroku git workflow as an alternative for contributors who prefer it.
