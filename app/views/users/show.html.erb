@@ -41,7 +41,7 @@
       </tr>
       <tr>
         <th scope="row">Access Token Expires At</th>
-        <td><%= @user.access_token_expires_at&.to_s(:long) || "—" %></td>
+        <td><%= @user.access_token_expires_at&.to_fs(:long) || "—" %></td>
       </tr>
       <tr>
         <th scope="row">Created</th>

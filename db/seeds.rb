@@ -19,7 +19,7 @@ User.delete_all
 
 user = User.find_or_initialize_by(
   provider: "google_oauth2",
-  uid:      "keeganasmith2003" # keep stable so it's idempotent
+  uid:      "keeganasmith2003"
 )
 
 user.assign_attributes(
