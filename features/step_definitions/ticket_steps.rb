@@ -76,27 +76,60 @@ Then("I should not see {string}") do |ticket_title|
 end
 
 # Background / fixture steps
+require "securerandom"
+
 Given("the following tickets exist:") do |table|
-  table.hashes.each do |row|
-    # Find or create the requester
+  table.hashes.each do |original_row|
+    row = original_row.dup
+
+    # --- requester (backward compatible) ---
     requester_email = row.delete("requester_email") || "testuser@example.com"
-    # Find by email to avoid creating duplicate users (OmniAuth test helper may have already
-    # created a user with this email). Only set missing attributes.
+
     requester = User.find_or_initialize_by(email: requester_email)
     requester.provider ||= "seed"
-    requester.uid ||= SecureRandom.uuid
-    requester.role ||= "user"
-    requester.name ||= "Test Requester"
+    requester.uid      ||= SecureRandom.uuid
+    requester.role     ||= "user"
+    requester.name     ||= "Test Requester"
     requester.save!
 
-    # Create the ticket with a valid requester
+    # --- optional assignee (for filtering by assignee) ---
+    assignee = nil
+    if row["assignee_email"].present?
+      assignee_email = row.delete("assignee_email")
+      assignee = User.find_or_initialize_by(email: assignee_email)
+      assignee.provider ||= "seed"
+      assignee.uid      ||= SecureRandom.uuid
+      assignee.role     ||= "user"
+      assignee.name     ||= assignee_email
+      assignee.save!
+    end
+
+    # --- core attributes (with sane defaults, same as before) ---
+    status   = row["status"].presence   || "open"
+    priority = row["priority"].presence || "low"
+    category = row["category"].presence || Ticket::CATEGORY_OPTIONS.first
+
+    # --- approval attributes (for filtering by approval_status) ---
+    approval_status = row["approval_status"].presence
+    # default to pending if not provided (keeps older tests happy)
+    approval_status ||= "pending"
+
+    approval_reason = row["approval_reason"].presence
+    # model requires approval_reason when approval_status == :rejected
+    if approval_status.to_s == "rejected" && approval_reason.blank?
+      approval_reason = "Rejected for test"
+    end
+
     Ticket.create!(
-      subject: row["subject"],
-      description: row["description"],
-      status: row["status"] || "open",
-      priority: row["priority"] || "low",
-      category: row["category"] || Ticket::CATEGORY_OPTIONS.first,
-      requester: requester
+      subject:         row["subject"],
+      description:     row["description"],
+      status:          status,
+      priority:        priority,
+      category:        category,
+      requester:       requester,
+      assignee:        assignee,
+      approval_status: approval_status,
+      approval_reason: approval_reason
     )
   end
 end
