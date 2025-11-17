@@ -7,6 +7,7 @@ RSpec.describe "tickets/index", type: :view do
   before(:each) do
     policy = policy_double
     view.singleton_class.send(:define_method, :policy) { |_record| policy }
+
     assign(:tickets, [
       create(
         :ticket,
@@ -25,6 +26,12 @@ RSpec.describe "tickets/index", type: :view do
         status: :on_hold
       )
     ])
+
+    # NEW: filter options expected by the index view
+    assign(:status_options, Ticket.statuses.keys)
+    assign(:approval_status_options, Ticket.approval_statuses.keys)
+    assign(:category_options, Ticket::CATEGORY_OPTIONS)
+    assign(:assignee_options, [])
   end
 
   it "renders a list of tickets" do

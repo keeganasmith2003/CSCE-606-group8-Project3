@@ -1,5 +1,54 @@
 <h1>Tickets</h1>
+<div class="tickets-filters">
+  <%= form_with url: request.path, method: :get, local: true, class: "filter-form" do |f| %>
+    <div class="filter-row">
+      <div class="filter-group">
+        <%= f.label :q, "Search", class: "filter-label" %>
+        <%= f.text_field :q, value: params[:q], placeholder: "Search subject or description…", class: "filter-input" %>
+      </div>
 
+      <div class="filter-group">
+        <%= f.label :status, "Status", class: "filter-label" %>
+        <%= f.select :status,
+              options_for_select(@status_options.map { |s| [s.titleize, s] }, params[:status]),
+              { include_blank: "All statuses" },
+              class: "filter-select" %>
+      </div>
+
+      <div class="filter-group">
+        <%= f.label :approval_status, "Approval", class: "filter-label" %>
+        <%= f.select :approval_status,
+              options_for_select(@approval_status_options.map { |s| [s.titleize, s] }, params[:approval_status]),
+              { include_blank: "All approval states" },
+              class: "filter-select" %>
+      </div>
+
+      <div class="filter-group">
+        <%= f.label :category, "Category", class: "filter-label" %>
+        <%= f.select :category,
+              options_for_select(@category_options, params[:category]),
+              { include_blank: "All categories" },
+              class: "filter-select" %>
+      </div>
+
+      <div class="filter-group">
+        <%= f.label :assignee_id, "Assignee", class: "filter-label" %>
+        <%= f.select :assignee_id,
+              options_for_select(
+                @assignee_options.map { |u| ["#{u.name || u.email}", u.id] },
+                params[:assignee_id]
+              ),
+              { include_blank: "Anyone" },
+              class: "filter-select" %>
+      </div>
+
+      <div class="filter-actions">
+        <%= f.submit "Filter", class: "btn" %>
+        <%= link_to "Clear", request.path, class: "btn btn-secondary" %>
+      </div>
+    </div>
+  <% end %>
+</div>
 <div id="tickets" class="tickets-index">
   <% @tickets.each do |ticket| %>
     <article class="ticket-card">

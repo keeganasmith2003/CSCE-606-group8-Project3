@@ -3,10 +3,11 @@ class TicketsController < ApplicationController
   before_action :set_ticket, only: %i[show edit update destroy assign close approve reject]
 
   def index
-    @tickets = policy_scope(Ticket)
-    @tickets = @tickets.where(status: params[:status]) if params[:status].present?
-    @tickets = @tickets.where(category: params[:category]) if params[:category].present?
-    @tickets = @tickets.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
+    @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team)
+
+    apply_filters!
+
+    load_filter_options
   end
 
   def mine
@@ -19,10 +20,11 @@ class TicketsController < ApplicationController
                  .or(
                    policy_scope(Ticket).where(team_id: team_ids)
                  )
+                 .includes(:requester, :assignee, :team)
 
-    @tickets = @tickets.where(status: params[:status]) if params[:status].present?
-    @tickets = @tickets.where(category: params[:category]) if params[:category].present?
-    @tickets = @tickets.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
+    apply_filters!
+
+    load_filter_options
 
     render :index
   end
@@ -206,6 +208,48 @@ class TicketsController < ApplicationController
 
 
   private
+  def apply_filters!
+    # status: integer enum
+    @tickets = @tickets.where(status: params[:status]) if params[:status].present?
+
+    # category: string
+    @tickets = @tickets.where(category: params[:category]) if params[:category].present?
+
+    # assignee
+    @tickets = @tickets.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
+
+    # approval_status: integer enum
+    @tickets = @tickets.where(approval_status: params[:approval_status]) if params[:approval_status].present?
+
+    # free-text search on subject + description
+    if params[:q].present?
+      q = "%#{params[:q]}%"
+      adapter = ActiveRecord::Base.connection.adapter_name.downcase.to_sym
+
+      if adapter == :postgresql
+        # Case-insensitive search in Postgres
+        @tickets = @tickets.where(
+          "tickets.subject ILIKE :q OR tickets.description ILIKE :q",
+          q: q
+        )
+      else
+        # SQLite (and others): emulate ILIKE with LOWER(...) LIKE ...
+        @tickets = @tickets.where(
+          "LOWER(tickets.subject) LIKE :q OR LOWER(tickets.description) LIKE :q",
+          q: q.downcase
+        )
+      end
+    end
+  end
+
+
+  def load_filter_options
+    # You can tweak these to be more scoped if desired
+    @status_options         = Ticket.statuses.keys
+    @approval_status_options = Ticket.approval_statuses.keys
+    @category_options       = Ticket.where.not(category: [ nil, "" ]).distinct.order(:category).pluck(:category)
+    @assignee_options       = User.where(id: @tickets.where.not(assignee_id: nil).select(:assignee_id).distinct)
+  end
 
   def set_ticket
     @ticket = Ticket.find(params[:id])
