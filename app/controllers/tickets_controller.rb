@@ -247,7 +247,7 @@ class TicketsController < ApplicationController
     # You can tweak these to be more scoped if desired
     @status_options         = Ticket.statuses.keys
     @approval_status_options = Ticket.approval_statuses.keys
-    @category_options       = Ticket.where.not(category: [nil, ""]).distinct.order(:category).pluck(:category)
+    @category_options       = Ticket.where.not(category: [ nil, "" ]).distinct.order(:category).pluck(:category)
     @assignee_options       = User.where(id: @tickets.where.not(assignee_id: nil).select(:assignee_id).distinct)
   end
 
