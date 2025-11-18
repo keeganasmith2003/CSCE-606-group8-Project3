@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   root "home#index"
 
   resources :users
+  get "/profile", to: "users#profile", as: :profile
   resources :tickets do
     collection do
       get :mine

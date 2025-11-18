@@ -1,6 +1,7 @@
 class UsersController < ApplicationController
   before_action :require_login
-  before_action :require_sysadmin, except: [ :index, :show ]
+  # sysadmin-only actions; allow index/show/profile for regular users
+  before_action :require_sysadmin, except: [ :index, :show, :profile ]
   before_action :set_user, only: [ :show, :edit, :update, :destroy ]
 
   def index
@@ -8,6 +9,14 @@ class UsersController < ApplicationController
   end
 
   def show; end
+
+  # Show current user's profile
+  def profile
+    @user = current_user
+    if @user.nil?
+      redirect_to login_path, alert: "Please sign in."
+    end
+  end
 
   def new
     @user = User.new

@@ -1,0 +1,51 @@
+<div class="container user-profile">
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <span>Profile</span>
+  </nav>
+
+  <h1>My Profile</h1>
+
+  <% if @user %>
+    <table class="details-table">
+      <tbody>
+        <tr>
+          <th scope="row">Email</th>
+          <td><%= mail_to @user.email %></td>
+        </tr>
+        <tr>
+          <th scope="row">Name</th>
+          <td><%= @user.name.presence || "—" %></td>
+        </tr>
+        <tr>
+          <th scope="row">Role</th>
+          <td><%= @user.role %></td>
+        </tr>
+        <tr>
+          <th scope="row">Image</th>
+          <td>
+            <% if @user.image_url.present? %>
+              <img src="<%= @user.image_url %>" alt="User image" style="max-height:80px">
+            <% else %>
+              —
+            <% end %>
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">Created</th>
+          <td><%= l @user.created_at, format: :long %></td>
+        </tr>
+        <tr>
+          <th scope="row">Updated</th>
+          <td><%= l @user.updated_at, format: :long %></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="page-actions">
+      <%= link_to "Edit", edit_user_path(@user), class: "btn" %>
+      <%= link_to "Back", root_path, class: "btn" %>
+    </div>
+  <% else %>
+    <p>Please <%= link_to "sign in", login_path %> to see your profile.</p>
+  <% end %>
+</div>

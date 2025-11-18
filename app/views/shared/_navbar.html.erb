@@ -25,8 +25,8 @@
 
   <div class="nav-right">
     <% if current_user %>
-      <span class="nav-text">Hi, <%= current_user.display_name %> of role <%= current_user.role %> </span>
-      <%= button_to "Log out", logout_path, method: :delete, class: "btn" %>
+        <span class="nav-text">Hi, <%= link_to current_user.display_name, profile_path %> of role <%= current_user.role %> </span>
+        <%= button_to "Log out", logout_path, method: :delete, class: "btn" %>
     <% else %>
       <%= link_to "Login with Google", login_path, class: "btn" %>
     <% end %>
