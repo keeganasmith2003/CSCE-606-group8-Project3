@@ -1,9 +1,11 @@
 <!-- app/views/teams/new.html.erb -->
-<div class="team-show">
-  <h1>New Team</h1>
-  <%= render "form", team: @team %>
-  <div class="page-actions">
-    <%= link_to "Back to teams", teams_path, class: "btn btn-secondary" %>
+<div class="container team-new">
+  <div class="headline-bar">
+    <h1>New Team</h1>
+    <div class="headline-right">
+      <%= link_to "Back", teams_path, class: "btn btn-secondary" %>
+    </div>
   </div>
-  
+
+  <%= render "form", team: @team %>
 </div>

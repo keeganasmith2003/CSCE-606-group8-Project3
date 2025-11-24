@@ -1,14 +1,23 @@
-<!-- app/views/teams/_form.html.erb -->
-<%= form_with(model: team, local: true) do |f| %>
-  <div class="field">
-    <%= f.label :name %>
-    <%= f.text_field :name, required: true %>
+<%= form_with(model: team, local: true, html: { class: "form-card" }) do |f| %>
+  <% if team.errors.any? %>
+    <div class="form-errors">
+      <% team.errors.full_messages.each do |message| %>
+        <div class="form-error">• <%= message %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="form-grid">
+    <div class="form-field">
+      <%= f.label :name %>
+      <%= f.text_field :name, required: true, style: "width: 100%; box-sizing: border-box;" %>
+    </div>
+    <div class="form-field form-field--wide">
+      <%= f.label :description %>
+      <%= f.text_area :description, rows: 4, style: "width: 100%; box-sizing: border-box;" %>
+    </div>
   </div>
-  <div class="field">
-    <%= f.label :description %>
-    <%= f.text_area :description, rows: 4 %>
-  </div>
-  <div class="actions">
+  <div class="actions-row">
     <%= f.submit class: "btn btn-primary" %>
   </div>
 <% end %>

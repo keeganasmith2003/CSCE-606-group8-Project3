@@ -1,15 +1,10 @@
 <div class="ticket-new">
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
-    <%= link_to "Tickets", tickets_path %>
-    <span aria-hidden="true">›</span>
-    <span>New Ticket</span>
-  </nav>
-
-  <h1>New Ticket</h1>
+  <div class="headline-bar">
+    <h1>New Ticket</h1>
+    <div class="headline-right">
+      <%= link_to "Back", tickets_path, class: "btn btn-secondary" %>
+    </div>
+  </div>
 
   <%= render 'form', ticket: @ticket %>
-
-  <div class="page-actions">
-    <%= link_to "Back to tickets", tickets_path, class: "btn" %>
-  </div>
 </div>

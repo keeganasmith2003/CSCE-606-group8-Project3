@@ -1,94 +1,106 @@
-<h1>Tickets</h1>
-<div class="tickets-filters">
-  <%= form_with url: request.path, method: :get, local: true, class: "filter-form" do |f| %>
-    <div class="filter-row">
-      <div class="filter-group">
-        <%= f.label :q, "Search", class: "filter-label" %>
-        <%= f.text_field :q, value: params[:q], placeholder: "Search subject or description…", class: "filter-input" %>
+<div class="container tickets-index-page">
+  <div class="headline-bar">
+    <h1>Tickets</h1>
+    <div class="headline-right">
+      <%= link_to "New Ticket", new_ticket_path, class: "btn btn-primary" %>
+    </div>
+  </div>
+
+  <div class="tickets-filters form-card">
+    <%= form_with url: request.path, method: :get, local: true, class: "filter-form" do |f| %>
+      <div class="form-grid">
+        <div class="form-field">
+          <%= f.label :q, "Search" %>
+          <%= f.text_field :q, value: params[:q], placeholder: "Search subject or description…", class: "filter-input" %>
+        </div>
+
+        <div class="form-field">
+          <%= f.label :status, "Status" %>
+          <%= f.select :status,
+                options_for_select(@status_options.map { |s| [s.titleize, s] }, params[:status]),
+                { include_blank: "All statuses" },
+                class: "filter-select" %>
+        </div>
+
+        <div class="form-field">
+          <%= f.label :approval_status, "Approval" %>
+          <%= f.select :approval_status,
+                options_for_select(@approval_status_options.map { |s| [s.titleize, s] }, params[:approval_status]),
+                { include_blank: "All approval states" },
+                class: "filter-select" %>
+        </div>
+
+        <div class="form-field">
+          <%= f.label :category, "Category" %>
+          <%= f.select :category,
+                options_for_select(@category_options, params[:category]),
+                { include_blank: "All categories" },
+                class: "filter-select" %>
+        </div>
+
+        <div class="form-field">
+          <%= f.label :assignee_id, "Assignee" %>
+          <%= f.select :assignee_id,
+                options_for_select(
+                  @assignee_options.map { |u| ["#{u.name || u.email}", u.id] },
+                  params[:assignee_id]
+                ),
+                { include_blank: "Anyone" },
+                class: "filter-select" %>
+        </div>
       </div>
 
-      <div class="filter-group">
-        <%= f.label :status, "Status", class: "filter-label" %>
-        <%= f.select :status,
-              options_for_select(@status_options.map { |s| [s.titleize, s] }, params[:status]),
-              { include_blank: "All statuses" },
-              class: "filter-select" %>
-      </div>
-
-      <div class="filter-group">
-        <%= f.label :approval_status, "Approval", class: "filter-label" %>
-        <%= f.select :approval_status,
-              options_for_select(@approval_status_options.map { |s| [s.titleize, s] }, params[:approval_status]),
-              { include_blank: "All approval states" },
-              class: "filter-select" %>
-      </div>
-
-      <div class="filter-group">
-        <%= f.label :category, "Category", class: "filter-label" %>
-        <%= f.select :category,
-              options_for_select(@category_options, params[:category]),
-              { include_blank: "All categories" },
-              class: "filter-select" %>
-      </div>
-
-      <div class="filter-group">
-        <%= f.label :assignee_id, "Assignee", class: "filter-label" %>
-        <%= f.select :assignee_id,
-              options_for_select(
-                @assignee_options.map { |u| ["#{u.name || u.email}", u.id] },
-                params[:assignee_id]
-              ),
-              { include_blank: "Anyone" },
-              class: "filter-select" %>
-      </div>
-
-      <div class="filter-actions">
+      <div class="actions-row">
         <%= f.submit "Filter", class: "btn" %>
         <%= link_to "Clear", request.path, class: "btn btn-secondary" %>
       </div>
-    </div>
-  <% end %>
-</div>
-<div id="tickets" class="tickets-index">
-  <% @tickets.each do |ticket| %>
-    <article class="ticket-card">
-      <header class="ticket-card__header">
-        <h2 class="ticket-card__title"><%= link_to ticket.subject, ticket %></h2>
-      </header>
-      <div class="ticket-card__meta">
-        <p>
-          <strong>Status:</strong>
-          <span class="status-badge status-<%= ticket.status %>"><%= ticket.status.titleize %></span>
-          <%# Approval indicator: emoji + label for quick glance %>
-          <span class="approval-badge approval-<%= ticket.approval_status %>" aria-hidden="true">
-            <% case ticket.approval_status.to_s %>
-            <% when 'approved' %>
-              ✅
-          <% when 'rejected' %>
-              <!-- Inline SVG red cross so it renders red across platforms (not affected by emoji fallback) -->
-              <svg class="approval-icon approval-rejected" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle; margin-left:6px;">
-                <path fill="#c82333" d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"/>
-              </svg>
-            <% else %>
-              ⏳
-            <% end %>
-          </span>
-          <span class="sr-only">Approval status: <%= ticket.approval_status.to_s.titleize %></span>
-        </p>
-        <p><strong>Priority:</strong> <%= ticket.priority.present? ? ticket.priority.titleize : "Not set" %></p>
-        <p><strong>Category:</strong> <%= ticket.category %></p>
-      </div>
-      <p class="ticket-card__excerpt"><%= truncate(ticket.description, length: 160) %></p>
-      <footer class="ticket-card__actions">
-        <%= link_to "Show this ticket", ticket, class: "btn" %>
-        <% if policy(ticket).destroy? %>
-          <%= button_to "Delete", ticket_path(ticket), method: :delete, data: { confirm: "Delete this ticket?" }, class: "btn btn-danger" %>
-        <% end %>
-      </footer>
-    </article>
-  <% end %>
-</div>
+    <% end %>
+  </div>
 
-<div class="page-actions">
-  <%= link_to "New ticket", new_ticket_path, class: "btn" %>
+  <div id="tickets" class="tickets-index" style="margin-top: 2rem;">
+    <% @tickets.each do |ticket| %>
+      <article class="ticket-card">
+        <header class="ticket-card__header">
+          <div class="ticket-card__meta-badges">
+            <span class="status-badge status-<%= ticket.status %>"><%= ticket.status.titleize %></span>
+            
+            <span class="approval-badge approval-<%= ticket.approval_status %>" aria-hidden="true">
+              <% case ticket.approval_status.to_s %>
+              <% when 'approved' %>
+                ✅
+              <% when 'rejected' %>
+                <svg class="approval-icon approval-rejected" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle; margin-left:6px;">
+                  <path fill="#c82333" d="M18.3 5.7a1 1 0 0 0-1.4 0L12 10.6 7.1 5.7A1 1 0 1 0 5.7 7.1L10.6 12l-4.9 4.9a1 1 0 1 0 1.4 1.4L12 13.4l4.9 4.9a1 1 0 0 0 1.4-1.4L13.4 12l4.9-4.9a1 1 0 0 0 0-1.4z"/>
+                </svg>
+              <% else %>
+                ⏳
+              <% end %>
+            </span>
+            <span class="sr-only">Approval status: <%= ticket.approval_status.to_s.titleize %></span>
+            
+            <% if ticket.priority.present? %>
+              <span class="status-badge" style="background:#eee; color:#444;"><%= ticket.priority.titleize %></span>
+            <% end %>
+            
+            <span class="status-badge" style="background:#f0f4f8; color:#0e7afe;"><%= ticket.category %></span>
+          </div>
+
+          <h2 class="ticket-card__title mt-2">
+            <%= link_to ticket.subject, ticket %>
+          </h2>
+        </header>
+
+        <div class="ticket-card__body">
+          <p class="ticket-card__excerpt"><%= truncate(ticket.description, length: 160) %></p>
+        </div>
+
+        <footer class="ticket-card__actions" style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 0.75rem; justify-content: flex-end;">
+          <%= link_to "Show", ticket, class: "btn" %>
+          <% if policy(ticket).destroy? %>
+            <%= button_to "Delete", ticket_path(ticket), method: :delete, data: { confirm: "Delete this ticket?" }, class: "btn btn-danger-outline" %>
+          <% end %>
+        </footer>
+      </article>
+    <% end %>
+  </div>
 </div>

@@ -2,7 +2,7 @@
   <% if @ticket.errors.any? %>
     <div class="form-errors">
       <% @ticket.errors.full_messages.each do |message| %>
-        <div class="form-error"><%= message %></div>
+        <div class="form-error">• <%= message %></div>
       <% end %>
     </div>
   <% end %>
@@ -16,60 +16,64 @@
     <% if policy(@ticket).change_status? %>
       <div class="form-field">
         <%= form.label :status %>
-        <%= form.select :status, Ticket.statuses.keys.map { |s| [s.titleize, s] } %>
+        <%= form.select :status, Ticket.statuses.keys.map { |s| [s.titleize, s] }, {}, { class: "form-select" } %>
       </div>
     <% end %>
 
     <div class="form-field">
       <%= form.label :priority %>
-      <%= form.select :priority, Ticket.priorities.keys.map { |p| [p.titleize, p] }, {}, { class: "priority-select" } %>
+      <%= form.select :priority, Ticket.priorities.keys.map { |p| [p.titleize, p] }, {}, { class: "form-select" } %>
     </div>
 
     <div class="form-field">
       <%= form.label :category %>
-      <%= form.select :category, Ticket::CATEGORY_OPTIONS, { prompt: "Select a category" }, { class: "category-select" } %>
+      <%= form.select :category, Ticket::CATEGORY_OPTIONS, { prompt: "Select a category" }, { class: "form-select" } %>
     </div>
-
-    <%# Approval editable by staff/admin only %>
-    <% if respond_to?(:current_user) && (current_user&.agent? || current_user&.admin?) %>
-      <% if @ticket.attachments.attached? %>
-        <div class="form-field">
-          <label>Existing attachments</label>
-          <ul class="existing-attachments" style="list-style:disc; padding-left:1.2rem;">
-            <% @ticket.attachments.each do |att| %>
-              <li style="margin-bottom:0.4rem;">
-                <span style="display:inline-block; vertical-align:middle;">
-                  <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener" %>
-                  <span style="color:#666; margin-left:6px; font-size:0.95em;">(<%= number_to_human_size(att.byte_size) %>)</span>
-                </span>
-                <label style="display:inline-block; margin-left:12px; vertical-align:middle; font-weight:normal;">
-                  <input type="checkbox" name="ticket[remove_attachment_ids][]" value="<%= att.id %>" style="vertical-align:middle;" />
-                  <span style="margin-left:6px;">Remove</span>
-                </label>
-              </li>
-            <% end %>
-          </ul>
-        </div>
-      <% end %>
-      <div class="form-field">
-        <%= form.label :approval_status, "Approval status" %>
-        <%= form.select :approval_status, Ticket.approval_statuses.keys.map { |k| [k.titleize, k] }, {}, { class: "form-select" } %>
-      </div>
-
-      <div class="form-field form-field--wide">
-        <%= form.label :approval_reason, "Rejection reason (if rejecting)" %>
-        <%= form.text_area :approval_reason, rows: 3 %>
-      </div>
-      <div class="form-field">
-        <%= form.label :attachments, "Attachments (staff only)" %>
-        <%= form.file_field :attachments, multiple: true %>
-      </div>
-    <% end %>
 
     <div class="form-field form-field--wide">
       <%= form.label :description %>
-      <%= form.text_area :description, rows: 10, cols: 80 %>
+      <%= form.text_area :description, rows: 8 %>
     </div>
+
+    <% if respond_to?(:current_user) && (current_user&.agent? || current_user&.admin?) %>
+      <div class="section-divider">Staff Controls</div>
+
+      <div class="form-field">
+        <%= form.label :approval_status %>
+        <%= form.select :approval_status, Ticket.approval_statuses.keys.map { |k| [k.titleize, k] }, {}, { class: "form-select" } %>
+      </div>
+
+      <div class="form-field">
+        <%= form.label :attachments, "Upload New Files" %>
+        <%= form.file_field :attachments, multiple: true, style: "padding: 0.4rem;" %>
+      </div>
+
+      <div class="form-field form-field--wide">
+        <%= form.label :approval_reason, "Rejection Reason (if rejecting)" %>
+        <%= form.text_area :approval_reason, rows: 2, placeholder: "Enter reason..." %>
+      </div>
+
+      <% if @ticket.attachments.attached? %>
+        <div class="form-field form-field--wide">
+          <label style="display:block; margin-bottom:0.5rem;">Manage Existing Attachments</label>
+          <div class="attachment-manage-list">
+            <% @ticket.attachments.each do |att| %>
+              <div class="attachment-manage-item">
+                <div class="attachment-manage-left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                  <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener", style: "text-decoration:none; color:#0366d6;" %>
+                  <span style="color:#6a737d; font-size:0.85em;">(<%= number_to_human_size(att.byte_size) %>)</span>
+                </div>
+                <label class="attachment-remove-label">
+                  <input type="checkbox" name="ticket[remove_attachment_ids][]" value="<%= att.id %>" />
+                  <span>Remove</span>
+                </label>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
   </div>
 
   <div class="actions-row">

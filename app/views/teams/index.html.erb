@@ -1,23 +1,44 @@
-<!-- app/views/teams/index.html.erb -->
-<h1>Teams</h1>
+<div class="container teams-index-page">
+  <div class="headline-bar">
+    <h1>Teams</h1>
+    <div class="headline-right">
+      <% if policy(Team).create? %>
+        <%= link_to "New Team", new_team_path, class: "btn btn-primary" %>
+      <% end %>
+    </div>
+  </div>
 
-<% if policy(Team).create? %>
-  <%= link_to "New Team", new_team_path, class: "btn btn-primary" %>
-<% end %>
-
-<table class="table">
-  <thead><tr><th>Name</th><th>Members</th><th></th></tr></thead>
-  <tbody>
+  <div class="teams-index">
     <% @teams.each do |team| %>
-      <tr>
-        <td class="team-card__title"><%= link_to team.name, team %></td>
-        <td><%= team.members.count %></td>
-        <td class="team-card__actions">
-          <% if policy(team).update? %>
-            <%= link_to "Edit", edit_team_path(team), class: "btn btn-sm" %>
+      <article class="team-card">
+        <header class="team-card__header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <h2 class="team-card__title" style="margin: 0; font-size: 1.25rem;">
+            <%= link_to team.name, team %>
+          </h2>
+          <span class="status-badge" style="background-color: #f1f8ff; color: #0366d6; font-size: 0.85rem;">
+            <%= pluralize(team.members.count, 'member') %>
+          </span>
+        </header>
+
+        <div class="team-card__body" style="margin: 0.75rem 0;">
+          <% if team.description.present? %>
+            <p class="team-card__excerpt" style="color: #586069; margin: 0;">
+              <%= truncate(team.description, length: 120) %>
+            </p>
+          <% else %>
+            <p class="team-card__excerpt" style="color: #999; font-style: italic; margin: 0;">
+              No description provided.
+            </p>
           <% end %>
-        </td>
-      </tr>
+        </div>
+
+        <footer class="team-card__actions" style="margin-top: 1rem; border-top: 1px solid #eee; padding-top: 0.75rem; display: flex; justify-content: flex-end; gap: 0.5rem;">
+          <%= link_to "Show", team, class: "btn" %>
+          <% if policy(team).update? %>
+            <%= link_to "Edit", edit_team_path(team), class: "btn btn-secondary" %>
+          <% end %>
+        </footer>
+      </article>
     <% end %>
-  </tbody>
-</table>
+  </div>
+</div>

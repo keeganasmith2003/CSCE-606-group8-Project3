@@ -1,34 +1,55 @@
 <nav class="navbar">
-  <div class="nav-left">
-    <%= link_to "MyApp", root_path, class: "brand" %>
-    <%= link_to "Tickets", tickets_path, class: "nav-link" %>
-
-    <%# Show "My Tickets" only for staff users %>
-    <% if current_user&.agent? %>
-      <%= link_to "My Tickets", mine_tickets_path, class: "nav-link" %>
-    <% end %>
-
-    <% if current_user&.sysadmin? %>
-      <%= link_to "Teams", teams_path, class: "nav-link" %>
-    <% elsif current_user&.agent? %>
-      <% if (team = current_user.teams.first) %>
-        <%= link_to team.name, team_path(team), class: "nav-link" %>
-      <% else %>
-        <%= link_to "Teams", teams_path, class: "nav-link" %>
+  <div class="container navbar-container">
+    <div class="nav-left">
+      <%= link_to root_path, class: "brand-link" do %>
+        <span class="brand-text">TicketingSystem</span>
       <% end %>
-    <% end %>
 
-    <% if current_user&.sysadmin? %>
-      <%= link_to "Users", users_path, class: "nav-link" %>
-    <% end %>
-  </div>
+      <div class="nav-items" style="display:flex; gap: 1.5rem;">
+        <%= link_to "Tickets", tickets_path, class: "nav-link" %>
 
-  <div class="nav-right">
-    <% if current_user %>
-        <span class="nav-text">Hi, <%= link_to current_user.display_name, profile_path %> of role <%= current_user.role %> </span>
-        <%= button_to "Log out", logout_path, method: :delete, class: "btn" %>
-    <% else %>
-      <%= link_to "Login with Google", login_path, class: "btn" %>
-    <% end %>
+        <%# Show "My Tickets" only for staff users %>
+        <% if current_user&.agent? %>
+          <%= link_to "My Tickets", mine_tickets_path, class: "nav-link" %>
+        <% end %>
+
+        <% if current_user&.sysadmin? %>
+          <%= link_to "Teams", teams_path, class: "nav-link" %>
+        <% elsif current_user&.agent? %>
+          <% if (team = current_user.teams.first) %>
+            <%= link_to team.name, team_path(team), class: "nav-link" %>
+          <% else %>
+            <%= link_to "Teams", teams_path, class: "nav-link" %>
+          <% end %>
+        <% end %>
+
+        <% if current_user&.sysadmin? %>
+          <%= link_to "Users", users_path, class: "nav-link" %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <% if current_user %>
+        <div class="user-menu">
+          <span class="role-badge role-<%= current_user.role %>" style="font-size: 0.75rem; padding: 0.15rem 0.5rem;"><%= current_user.role.titleize %></span>
+          
+          <%= link_to profile_path, class: "user-profile-link" do %>
+            <% if current_user.image_url.present? %>
+              <img src="<%= current_user.image_url %>" class="nav-avatar" alt="<%= current_user.display_name %>">
+            <% else %>
+              <div class="nav-avatar-placeholder">👤</div>
+            <% end %>
+            <span><%= current_user.display_name %></span>
+          <% end %>
+
+          <span class="nav-divider"></span>
+          
+          <%= button_to "Log out", logout_path, method: :delete, class: "btn btn-secondary btn-sm" %>
+        </div>
+      <% else %>
+        <%= link_to "Login with Google", login_path, class: "btn btn-primary" %>
+      <% end %>
+    </div>
   </div>
 </nav>

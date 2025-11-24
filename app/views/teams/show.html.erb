@@ -1,41 +1,95 @@
-<!-- app/views/teams/show.html.erb -->
-<div class="team-show">
-  <h1><%= @team.name %></h1>
-  <p><%= @team.description %></p>
+<div class="container team-show">
+  <div class="headline-bar">
+    <div class="headline-left">
+      <h1><%= @team.name %></h1>
+    </div>
+    <div class="headline-right">
+      <%= link_to "Back", teams_path, class: "btn btn-secondary" %>
+      <% if policy(@team).update? %>
+        <%= link_to "Edit", edit_team_path(@team), class: "btn btn-primary" %>
+      <% end %>
+    </div>
+  </div>
 
-  <h2>Members</h2>
-  <ul class="team-members">
-    <% @memberships.each do |m| %>
-      <li class="member-row">
-        <span><%= m.user.name || m.user.email %> <% if m.manager? %>(manager)<% end %></span>
-        <% if policy(TeamMembership).destroy? %>
-          <%= button_to "Remove",
-                team_team_membership_path(@team, m),
-                method: :delete,
-                form: { data: { turbo_confirm: "Remove member?" } },
-                class: "btn btn-danger btn-sm" %>
+  <div class="description-card">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #555; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">About this Team</h3>
+    <div class="prose">
+      <% if @team.description.present? %>
+        <%= simple_format(@team.description) %>
+      <% else %>
+        <p style="color: #999; font-style: italic;">No description provided.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="team-layout">
+    <div class="members-section">
+      <h2 style="font-size: 1.25rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        Team Members
+        <span class="status-badge" style="font-size: 0.8rem; background: #eee; color: #555;"><%= @memberships.count %></span>
+      </h2>
+      
+      <div class="members-list-card">
+        <% @memberships.each do |m| %>
+          <div class="member-row">
+            <div class="member-info">
+              <% if m.user.image_url.present? %>
+                <img src="<%= m.user.image_url %>" class="member-avatar" alt="<%= m.user.display_name %>">
+              <% else %>
+                <div class="member-avatar-placeholder">👤</div>
+              <% end %>
+              
+              <div>
+                <div style="font-weight: 500; color: #24292e;">
+                  <%= m.user.display_name %>
+                </div>
+                <% if m.manager? %>
+                  <span class="role-badge-manager">Manager</span>
+                <% else %>
+                  <span style="font-size: 0.85rem; color: #6a737d;">Member</span>
+                <% end %>
+              </div>
+            </div>
+
+            <% if policy(TeamMembership).destroy? %>
+              <%= button_to "Remove",
+                    team_team_membership_path(@team, m),
+                    method: :delete,
+                    form: { data: { turbo_confirm: "Remove member?" } },
+                    class: "btn btn-danger-outline btn-sm" %>
+            <% end %>
+          </div>
         <% end %>
-      </li>
-    <% end %>
-  </ul>
-
-  <% if policy(TeamMembership).create? %>
-    <h3>Add Member</h3>
-    <%= form_with url: team_team_memberships_path(@team), scope: :team_membership, local: true, html: { class: "team-form" } do |f| %>
-      <div class="field">
-        <%= f.label :user_id, "User" %>
-        <%= f.collection_select :user_id, User.order(:name), :id, :name %>
+        
+        <% if @memberships.empty? %>
+          <div style="padding: 2rem; text-align: center; color: #666;">
+            No members in this team yet.
+          </div>
+        <% end %>
       </div>
-      <div class="field">
-        <%= f.label :role %>
-        <%= f.select :role, TeamMembership.roles.keys.map { |r| [r.titleize, r] } %>
-      </div>
-      <%= f.submit "Add", class: "btn btn-primary" %>
-    <% end %>
-  <% end %>
+    </div>
 
-  <div class="team-actions mt">
-    <%= link_to "Edit", edit_team_path(@team), class: "btn" if policy(@team).update? %>
-    <%= link_to "Back", teams_path, class: "btn btn-secondary" %>
+    <% if policy(TeamMembership).create? %>
+      <div class="add-member-section">
+        <div class="form-card" style="position: sticky; top: 1rem;">
+          <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;">Add Member</h3>
+          <%= form_with url: team_team_memberships_path(@team), scope: :team_membership, local: true do |f| %>
+            <div class="form-field">
+              <%= f.label :user_id, "Select User" %>
+              <%= f.collection_select :user_id, User.order(:name), :id, :display_name, { prompt: "Choose user..." }, { class: "form-select", style: "width: 100%;" } %>
+            </div>
+            
+            <div class="form-field">
+              <%= f.label :role, "Role in Team" %>
+              <%= f.select :role, TeamMembership.roles.keys.map { |r| [r.titleize, r] }, {}, { class: "form-select", style: "width: 100%;" } %>
+            </div>
+            
+            <div style="margin-top: 1rem;">
+              <%= f.submit "Add Member", class: "btn btn-primary", style: "width: 100%;" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

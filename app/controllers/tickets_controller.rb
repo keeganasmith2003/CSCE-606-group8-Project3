@@ -92,6 +92,8 @@ class TicketsController < ApplicationController
       when "approved"
         begin
           @ticket.approve!(current_user)
+          TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
+          
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not approve ticket: #{e.message}")
@@ -101,12 +103,14 @@ class TicketsController < ApplicationController
         reason = params.dig(:ticket, :approval_reason)
         if reason.blank?
           # Provide a clearer, user-friendly message when staff attempt to reject without a reason
-          # Add as a base error so the message is shown verbatim (not prefixed by the attribute name).
           @ticket.errors.add(:base, "Reject reason cannot be blank")
           render :edit, status: :unprocessable_content and return
         end
         begin
           @ticket.reject!(current_user, reason)
+          # 2. Send email on Rejection
+          TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
+
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not reject ticket: #{e.message}")
@@ -115,11 +119,17 @@ class TicketsController < ApplicationController
       when "pending"
         # reset approval fields
         @ticket.update(approval_status: :pending, approver: nil, approval_reason: nil, approved_at: nil)
+        # 3. Send email on Reset to Pending
+        TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
+
         redirect_to @ticket, notice: "Ticket was successfully updated." and return
       end
     end
 
     if @ticket.update(ticket_params)
+      # 4. Send email on Standard Update
+      TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
+
       redirect_to @ticket, notice: "Ticket was successfully updated."
     else
       render :edit, status: :unprocessable_content
@@ -136,6 +146,7 @@ class TicketsController < ApplicationController
     authorize @ticket, :close?
 
     if @ticket.update(status: :resolved)
+      TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to @ticket, notice: "Ticket resolved successfully."
     else
       redirect_to @ticket, alert: @ticket.errors.full_messages.to_sentence
@@ -146,6 +157,7 @@ class TicketsController < ApplicationController
     authorize @ticket, :approve?
     begin
       @ticket.approve!(current_user)
+      TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to tickets_path, notice: "Ticket approved."
     rescue => e
       redirect_to @ticket, alert: "Could not approve ticket: #{e.message}"
@@ -162,6 +174,7 @@ class TicketsController < ApplicationController
 
     begin
       @ticket.reject!(current_user, reason)
+      TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to tickets_path, notice: "Ticket rejected."
     rescue => e
       redirect_to @ticket, alert: "Could not reject ticket: #{e.message}"
@@ -198,6 +211,7 @@ class TicketsController < ApplicationController
     end
 
     if updates.any? && @ticket.update(updates)
+      TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to @ticket, notice: "Ticket assignment updated."
     else
       # Show why it failed (e.g., "Assignee must belong to the selected team")

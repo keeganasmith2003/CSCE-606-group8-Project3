@@ -1,147 +1,173 @@
-<div class="ticket-show">
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
-    <%= link_to "Tickets", tickets_path %>
-    <span aria-hidden="true">›</span>
-    <span><%= @ticket.subject %></span>
-  </nav>
-
-  <h1><%= @ticket.subject %></h1>
+<div class="ticket-show container">
   <div class="headline-bar">
     <div class="headline-left">
-      <%= link_to "Back", tickets_path, class: "btn btn-secondary" %>
-      <%= link_to "Edit", edit_ticket_path(@ticket), class: "btn btn-primary" %>
+      <span class="status-badge status-<%= @ticket.status %>" style="font-size: 0.9rem; vertical-align: middle;"><%= @ticket.status.titleize %></span>
+      <h1 style="display: inline-block; margin: 0 0 0 0.5rem; vertical-align: middle; font-size: 1.5rem;"><%= @ticket.subject %></h1>
     </div>
     <div class="headline-right">
+      <%= link_to "Back", tickets_path, class: "btn btn-secondary" %>
+      <% if policy(@ticket).edit? %>
+        <%= link_to "Edit", edit_ticket_path(@ticket), class: "btn btn-secondary" %>
+      <% end %>
       <% if policy(@ticket).close? %>
-        <%= button_to "Mark as Resolved", close_ticket_path(@ticket), method: :patch, data: { confirm: "Mark this ticket as resolved?" }, class: "btn btn-danger-outline" %>
+        <%= button_to "Resolve", close_ticket_path(@ticket), method: :patch, data: { confirm: "Mark resolved?" }, class: "btn btn-primary" %>
       <% end %>
     </div>
   </div>
 
-  <%# Approval controls for staff/sysadmin (approve / reject) %>
-  <%= render 'approval_controls' %>
+  <div class="ticket-layout">
+    <div class="ticket-main">
+      <%= render 'approval_controls' %>
 
-  <section class="ticket-details">
-    <dl class="details-list">
-      <dt>Status</dt>
-      <dd>
-        <span class="status-badge status-<%= @ticket.status %>"><%= @ticket.status.titleize %></span>
-        <% if policy(@ticket).change_status? %>
-          <div class="status-update-form">
-            <%= form_with(model: @ticket, url: ticket_path(@ticket), method: :patch, local: true) do |form| %>
-              <div class="status-form-row">
-                <%= form.label :status, "Change status", class: "status-form-label" %>
-                <%= form.select :status, Ticket.statuses.keys.map { |key| [key.titleize, key] }, {}, class: "form-select" %>
-                <%= form.submit "Update Status", class: "btn btn-primary btn-sm" %>
+      <div class="description-card">
+        <h3 style="margin-top: 0; font-size: 1rem; color: #555; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem;">Description</h3>
+        <div class="prose">
+          <%= simple_format(@ticket.description) %>
+        </div>
+      </div>
+
+      <% if @ticket.attachments.attached? %>
+        <section class="ticket-attachments">
+          <h2>Attachments</h2>
+          <ul class="attachment-list">
+            <% @ticket.attachments.each do |att| %>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener", style: "text-decoration:none; color:#0366d6;" %>
+                <span style="color:#6a737d; font-size:0.85em;">(<%= number_to_human_size(att.byte_size) %>)</span>
+              </li>
+            <% end %>
+          </ul>
+        </section>
+      <% end %>
+
+      <section class="ticket-comments">
+        <h2>Discussion (<%= @comments.size %>)</h2>
+        <% if @comments.any? %>
+          <div class="comments-list">
+            <%= render @comments %>
+          </div>
+        <% else %>
+          <div class="empty-state" style="text-align:center; padding: 2rem; background:#fafafa; border-radius:6px; color:#666;">
+            No comments yet. Start the conversation below.
+          </div>
+        <% end %>
+
+        <% if policy(@comment).create? %>
+          <div class="comment-form mt-4">
+            <%= form_with(model: [@ticket, @comment], local: true, html: { class: "form-card", style: "background:#f9f9f9;" }) do |form| %>
+              <div class="field">
+                <%= form.label :body, "Leave a comment" %>
+                <%= form.text_area :body, rows: 4, class: "form-control", style: "width:100%; box-sizing:border-box;" %>
+              </div>
+
+              <div class="actions-bar" style="justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                <div class="actions-left">
+                  <% if current_user.agent? || current_user.admin? %>
+                    <%= form.select :visibility, Comment.visibilities.keys.map { |v| [v.titleize, v] }, {}, { style: "padding: 0.3rem;" } %>
+                  <% end %>
+                </div>
+                <div class="actions-right">
+                  <%= form.submit "Comment", class: "btn btn-primary" %>
+                </div>
               </div>
             <% end %>
           </div>
         <% end %>
-      </dd>
+      </section>
+    </div>
 
-      <dt>Priority</dt>
-      <dd><%= @ticket.priority.present? ? @ticket.priority.titleize : "Not set" %></dd>
-
-      <dt>Ticket Type</dt>
-      <dd><%= @ticket.category %></dd>
-
-      <dt>Submitter</dt>
-      <dd><%= @ticket.requester.display_name %></dd>
-
-      <dt>Assignee</dt>
-      <dd><%= @ticket.assignee&.display_name || "Unassigned" %></dd>
-
-      <% if @ticket.closed_at.present? %>
-        <dt>Resolved At</dt>
-        <dd><%= l(@ticket.closed_at, format: :long) %></dd>
-      <% end %>
-    </dl>
-  </section>
-
-  <section class="ticket-history">
-    <h2>History</h2>
-    <ul>
-      <li>Created At: <%= l(@ticket.created_at, format: :long) %></li>
-      <li>Updated At: <%= l(@ticket.updated_at, format: :long) %></li>
-    </ul>
-  </section>
-
-  <section class="ticket-description">
-    <h2>Description</h2>
-    <div class="prose"><%= simple_format(@ticket.description) %></div>
-  </section>
-
-  <% if @ticket.attachments.attached? %>
-    <section class="ticket-attachments">
-      <h2>Attachments</h2>
-      <ul>
-        <% @ticket.attachments.each do |att| %>
-          <li>
-            <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener" %>
-            (<%= number_to_human_size(att.byte_size) %>)
-          </li>
-        <% end %>
-      </ul>
-    </section>
-  <% end %>
-
-  <% if policy(@ticket).assign? %>
-    <section class="assign-section">
-      <div class="assign-card">
-        <%= form_with(model: @ticket, url: assign_ticket_path(@ticket), method: :patch, local: true) do |form| %>
-          <div class="field">
-            <%= form.label :team_id, "Assign to team:" %>
-            <%= form.collection_select :team_id, Team.order(:name), :id, :name, include_blank: "Unassigned" %>
-          </div>
-
-          <div class="field">
-            <%= form.label :assignee_id, "Assign to agent:" %>
-            <% team_members = @ticket.team ? @ticket.team.members.order(:name) : User.where(role: [:staff, :agent]).order(:name) %>
-            <%= form.collection_select :assignee_id, team_members, :id, :name, include_blank: "Unassigned" %>
-          </div>
-          <div class="actions-row">
-            <%= form.submit "Assign", class: "btn" %>
+    <aside class="ticket-sidebar">
+      <div class="sidebar-card">
+        <span class="sidebar-heading">Details</span>
+        <div class="sidebar-data-row">
+          <span class="sidebar-label">Priority</span>
+          <span class="sidebar-value"><%= @ticket.priority&.titleize || "None" %></span>
+        </div>
+        <div class="sidebar-data-row">
+          <span class="sidebar-label">Category</span>
+          <span class="sidebar-value"><%= @ticket.category %></span>
+        </div>
+        <div class="sidebar-data-row">
+          <span class="sidebar-label">Submitter</span>
+          <span class="sidebar-value"><%= link_to @ticket.requester.display_name, "#", style: "text-decoration:none; color:#0366d6;" %></span>
+        </div>
+        
+        <% if policy(@ticket).change_status? %>
+          <div class="sidebar-action-box">
+             <%= form_with(model: @ticket, url: ticket_path(@ticket), method: :patch, local: true) do |form| %>
+               <label class="sidebar-label" style="display:block; margin-bottom:0.25rem;">Update Status</label>
+               <div style="display:flex; gap:0.5rem;">
+                 <%= form.select :status, Ticket.statuses.keys.map { |key| [key.titleize, key] }, {}, { style: "flex-grow:1; width:100%;" } %>
+                 <%= form.submit "Go", class: "btn btn-sm" %>
+               </div>
+             <% end %>
           </div>
         <% end %>
       </div>
-    </section>
-  <% end %>
 
-  <section class="ticket-comments">
-    <h2>Comments (<%= @comments.size %>)</h2>
-    <% if @comments.any? %>
-      <div class="comments-list">
-        <%= render @comments %>
-      </div>
-    <% else %>
-      <p>No comments yet.</p>
-    <% end %>
-  </section>
-
-  <% if policy(@comment).create? %>
-    <section class="comment-form">
-      <h3>Add a Comment</h3>
-      <%= form_with(model: [@ticket, @comment], local: true, html: { class: "form-card" }) do |form| %>
-        <div class="field">
-          <%= form.label :body, "Comment" %>
-          <%= form.text_area :body, rows: 10, cols: 80 %>
+      <% if policy(@ticket).assign? %>
+        <div class="sidebar-card">
+          <span class="sidebar-heading">Assignment</span>
+          <%= form_with(model: @ticket, url: assign_ticket_path(@ticket), method: :patch, local: true) do |form| %>
+            <div style="margin-bottom:0.75rem;">
+              <label class="sidebar-label" style="font-size:0.8rem;">Team</label>
+              <%= form.collection_select :team_id, Team.order(:name), :id, :name, { include_blank: "Unassigned" }, { style: "width:100%; display:block;" } %>
+            </div>
+            <div style="margin-bottom:0.75rem;">
+              <label class="sidebar-label" style="font-size:0.8rem;">Agent</label>
+              <% team_members = @ticket.team ? @ticket.team.members.order(:name) : User.where(role: [:staff, :agent]).order(:name) %>
+              <%= form.collection_select :assignee_id, team_members, :id, :name, { include_blank: "Unassigned" }, { style: "width:100%; display:block;" } %>
+            </div>
+            <%= form.submit "Update Assignment", class: "btn btn-sm btn-secondary", style: "width:100%;" %>
+          <% end %>
         </div>
+      <% else %>
+         <div class="sidebar-card">
+           <span class="sidebar-heading">Assignment</span>
+           <div class="sidebar-data-row">
+             <span class="sidebar-label">Team</span>
+             <span class="sidebar-value"><%= @ticket.team&.name || "None" %></span>
+           </div>
+           <div class="sidebar-data-row">
+             <span class="sidebar-label">Agent</span>
+             <span class="sidebar-value">
+               <% if @ticket.assignee %>
+                 <span style="display:flex; align-items:center; gap:0.4rem;">
+                   <span style="width:20px; height:20px; background:#ddd; border-radius:50%; display:inline-block;"></span>
+                   <%= @ticket.assignee.display_name %>
+                 </span>
+               <% else %>
+                 Unassigned
+               <% end %>
+             </span>
+           </div>
+         </div>
+      <% end %>
 
-        <% if current_user.agent? || current_user.admin? %>
-          <div class="field">
-            <%= form.label :visibility %>
-            <%= form.select :visibility, Comment.visibilities.keys.map { |v| [v.titleize, v] } %>
+      <div class="sidebar-card">
+        <span class="sidebar-heading">Dates</span>
+        <div class="sidebar-data-row">
+          <span class="sidebar-label">Created</span>
+          <span class="sidebar-value" title="<%= @ticket.created_at %>"><%= time_ago_in_words(@ticket.created_at) %> ago</span>
+        </div>
+        <div class="sidebar-data-row">
+          <span class="sidebar-label">Updated</span>
+          <span class="sidebar-value" title="<%= @ticket.updated_at %>"><%= time_ago_in_words(@ticket.updated_at) %> ago</span>
+        </div>
+        <% if @ticket.closed_at %>
+          <div class="sidebar-data-row">
+            <span class="sidebar-label">Resolved</span>
+            <span class="sidebar-value"><%= l(@ticket.closed_at, format: :short) %></span>
           </div>
         <% end %>
+      </div>
 
-        <div class="actions-row">
-          <%= form.submit "Post Comment", class: "btn btn-primary" %>
+      <% if policy(@ticket).destroy? %>
+        <div style="margin-top: 1rem; text-align: right;">
+           <%= button_to "Delete Ticket", ticket_path(@ticket), method: :delete, data: { confirm: "Are you sure? This cannot be undone." }, class: "btn btn-danger-outline btn-sm", style: "width:100%;" %>
         </div>
       <% end %>
-    </section>
-  <% end %>
-
-  <% if policy(@ticket).destroy? %>
-    <%= button_to "Destroy", ticket_path(@ticket), method: :delete, data: { confirm: "Delete this ticket?" }, class: "btn btn-danger" %>
-  <% end %>
+    </aside>
+  </div>
 </div>

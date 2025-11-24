@@ -1,41 +1,78 @@
-<%# Approval controls and read-only view.
-    - Agents/admins: show approve/reject controls when pending, otherwise show status and details.
-    - Non-staff (including the requester): show read-only approval status/details so the ticket owner can see the result.
-    Guard with respond_to?(:current_user) in view specs where helper may be undefined. %>
-
 <% if respond_to?(:current_user) && (current_user&.agent? || current_user&.admin?) %>
-  <div class="approval-controls">
-    <% if @ticket.approval_status == "pending" || @ticket.approval_status == :pending %>
-      <%= form_with url: approve_ticket_path(@ticket), method: :patch, local: true do %>
-        <%= submit_tag "Approve", class: "btn btn-primary" %>
-      <% end %>
+  
+  <%# Staff View %>
+  <% if @ticket.approval_status == "pending" || @ticket.approval_status == :pending %>
+    <div class="approval-card approval-pending">
+      <div class="approval-header">
+        <span>⚠️ Approval Required</span>
+      </div>
+      <div class="approval-meta">
+        This ticket is pending approval. Please review the details below.
+      </div>
+      
+      <div class="approval-actions">
+        <%= form_with url: approve_ticket_path(@ticket), method: :patch, local: true do %>
+          <%= submit_tag "Approve Ticket", class: "btn btn-primary", style: "background-color: #2ea44f; border-color: #2ea44f;" %>
+        <% end %>
 
-      <%= form_with url: reject_ticket_path(@ticket), method: :patch, local: true do |f| %>
-        <div>
-          <%= f.label :approval_reason, "Rejection reason (required)" %><br/>
-          <%= f.text_area :approval_reason, rows: 3 %>
-        </div>
-        <div>
-          <%= f.submit "Reject", class: "btn btn-danger" %>
-        </div>
-      <% end %>
-    <% else %>
-      <p><strong>Approval status:</strong> <%= @ticket.approval_status.to_s.titleize %></p>
-      <% if @ticket.approval_reason.present? %>
-        <p><strong>Reason:</strong> <%= @ticket.approval_reason %></p>
-      <% end %>
-      <p><strong>Approver:</strong> <%= @ticket.approver&.display_name %></p>
-    <% end %>
-  </div>
+        <%= form_with url: reject_ticket_path(@ticket), method: :patch, local: true, html: { class: "reject-form" } do |f| %>
+          <%= f.text_area :approval_reason, rows: 1, placeholder: "Reason for rejection...", class: "reject-input", required: true %>
+          <%= f.submit "Reject", class: "btn btn-danger", style: "white-space: nowrap;" %>
+        <% end %>
+      </div>
+    </div>
+  
+  <% else %>
+    <%# Staff View - Already Decided %>
+    <div class="approval-card approval-<%= @ticket.approval_status %>">
+      <div class="approval-header">
+        <% if @ticket.approval_approved? %>
+          <span>✅ Ticket Approved</span>
+        <% else %>
+          <span>🚫 Ticket Rejected</span>
+        <% end %>
+      </div>
+      <div class="approval-meta">
+        Decision by <strong><%= @ticket.approver&.display_name || "Unknown" %></strong>
+        <% if @ticket.approved_at %>
+           on <%= l @ticket.approved_at, format: :short %>
+        <% end %>
+        <% if @ticket.approval_reason.present? %>
+          <div class="approval-reason">"<%= @ticket.approval_reason %>"</div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
 <% else %>
-  <%# Read-only view for non-staff (ticket requester) - show status and optional reason/approver. %>
-  <div class="approval-controls approval-readonly">
-    <p><strong>Approval status:</strong> <%= @ticket.approval_status.to_s.titleize %></p>
-    <% if @ticket.approval_reason.present? %>
-      <p><strong>Reason:</strong> <%= @ticket.approval_reason %></p>
-    <% end %>
-    <% if @ticket.approver.present? %>
-      <p><strong>Approver:</strong> <%= @ticket.approver.display_name %></p>
+  
+  <%# Read-only View (Requester) %>
+  <div class="approval-card approval-<%= @ticket.approval_status %>">
+    <div class="approval-header">
+      <% case @ticket.approval_status.to_sym %>
+      <% when :pending %>
+        <span>⏳ Approval Pending</span>
+      <% when :approved %>
+        <span>✅ Approved</span>
+      <% when :rejected %>
+        <span>🚫 Rejected</span>
+      <% end %>
+    </div>
+    
+    <% unless @ticket.approval_pending? %>
+      <div class="approval-meta">
+        <% if @ticket.approval_rejected? && @ticket.approval_reason.present? %>
+          <div class="approval-reason">Reason: <%= @ticket.approval_reason %></div>
+        <% end %>
+        <div style="margin-top: 0.25rem; font-size: 0.85em; opacity: 0.8;">
+          Processed by <%= @ticket.approver&.display_name || "Staff" %>
+        </div>
+      </div>
+    <% else %>
+      <div class="approval-meta">
+        Please wait while our team reviews this request.
+      </div>
     <% end %>
   </div>
+
 <% end %>

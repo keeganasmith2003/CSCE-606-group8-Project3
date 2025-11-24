@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <h3>Hello <%= @user.display_name %>,</h3>
+    
+    <p>There has been an update to your ticket: <strong><%= @ticket.subject %></strong>.</p>
+    
+    <div style="border: 1px solid #ddd; padding: 15px; margin: 15px 0;">
+      <p><strong>Current Status:</strong> <%= @ticket.status.humanize.upcase %></p>
+      
+      <% if @ticket.approver.present? %>
+        <p><strong>Approval Status:</strong> <%= @ticket.approval_status.humanize %></p>
+        <% if @ticket.approval_rejected? %>
+          <p style="color: red;"><strong>Rejection Reason:</strong> <%= @ticket.approval_reason %></p>
+        <% end %>
+      <% end %>
+      
+      <% if @ticket.assignee.present? %>
+        <p><strong>Assigned Agent:</strong> <%= @ticket.assignee.display_name %></p>
+      <% end %>
+    </div>
+    
+    <p>Thank you,<br>Support Team</p>
+  </body>
+</html>

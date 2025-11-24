@@ -1,51 +1,55 @@
 <div class="container user-profile">
-  <nav class="breadcrumbs" aria-label="Breadcrumb">
-    <span>Profile</span>
-  </nav>
+  
 
-  <h1>My Profile</h1>
+  <div class="headline-bar">
+    <h1>My Profile</h1>
+  </div>
 
   <% if @user %>
-    <table class="details-table">
-      <tbody>
-        <tr>
-          <th scope="row">Email</th>
-          <td><%= mail_to @user.email %></td>
-        </tr>
-        <tr>
-          <th scope="row">Name</th>
-          <td><%= @user.name.presence || "—" %></td>
-        </tr>
-        <tr>
-          <th scope="row">Role</th>
-          <td><%= @user.role %></td>
-        </tr>
-        <tr>
-          <th scope="row">Image</th>
-          <td>
-            <% if @user.image_url.present? %>
-              <img src="<%= @user.image_url %>" alt="User image" style="max-height:80px">
-            <% else %>
-              —
-            <% end %>
-          </td>
-        </tr>
-        <tr>
-          <th scope="row">Created</th>
-          <td><%= l @user.created_at, format: :long %></td>
-        </tr>
-        <tr>
-          <th scope="row">Updated</th>
-          <td><%= l @user.updated_at, format: :long %></td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="ticket-details" style="display: flex; gap: 2rem; align-items: flex-start; padding: 2rem;">
+      <div style="flex-shrink: 0;">
+        <% if @user.image_url.present? %>
+          <img src="<%= @user.image_url %>" alt="User image" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <% else %>
+          <div style="width: 100px; height: 100px; border-radius: 50%; background: #f1f1f1; color: #999; display: flex; align-items: center; justify-content: center; font-size: 2.5rem;">
+            👤
+          </div>
+        <% end %>
+      </div>
+
+      <div style="flex-grow: 1;">
+        <dl class="details-list">
+          <dt>Name</dt>
+          <dd style="font-size: 1.1rem; font-weight: 600;"><%= @user.name.presence || "—" %></dd>
+
+          <dt>Email</dt>
+          <dd><%= mail_to @user.email %></dd>
+
+          <dt>Role</dt>
+          <dd><span class="role-badge role-<%= @user.role %>"><%= @user.role.titleize %></span></dd>
+
+          <dt>UID</dt>
+          <dd class="mono" style="font-family: monospace; color: #555;"><%= @user.uid %></dd>
+
+          <dt>Token Expires</dt>
+          <dd><%= @user.access_token_expires_at&.to_fs(:long) || "—" %></dd>
+
+          <dt>Created</dt>
+          <dd><%= l @user.created_at, format: :long %></dd>
+
+          <dt>Updated</dt>
+          <dd><%= l @user.updated_at, format: :long %></dd>
+        </dl>
+      </div>
+    </div>
 
     <div class="page-actions">
-      <%= link_to "Edit", edit_user_path(@user), class: "btn" %>
-      <%= link_to "Back", root_path, class: "btn" %>
+      <%= link_to "Edit", edit_user_path(@user), class: "btn btn-primary" %>
+      <%= link_to "Back", root_path, class: "btn btn-secondary" %>
     </div>
   <% else %>
-    <p>Please <%= link_to "sign in", login_path %> to see your profile.</p>
+    <div class="empty-state">
+      <p>Please <%= link_to "sign in", login_path %> to see your profile.</p>
+    </div>
   <% end %>
 </div>
