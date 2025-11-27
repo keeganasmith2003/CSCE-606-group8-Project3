@@ -77,11 +77,11 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
-    address:        'smtp.mailgun.org',
+    address:        "smtp.mailgun.org",
     port:           587,
-    domain:         'sandbox123456789.mailgun.org',
-    user_name:      ENV['EMAIL_ADDRESS'],
-    password:       ENV['PASSWORD'],
+    domain:         "sandbox123456789.mailgun.org",
+    user_name:      ENV["EMAIL_ADDRESS"],
+    password:       ENV["PASSWORD"],
     authentication: :plain,
     enable_starttls_auto: true
   }

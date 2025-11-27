@@ -93,7 +93,7 @@ class TicketsController < ApplicationController
         begin
           @ticket.approve!(current_user)
           TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-          
+
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not approve ticket: #{e.message}")
@@ -217,6 +217,31 @@ class TicketsController < ApplicationController
       # Show why it failed (e.g., "Assignee must belong to the selected team")
       message = @ticket.errors.full_messages.to_sentence.presence || "No assignment changes provided."
       redirect_to @ticket, alert: message
+    end
+  end
+
+  # Kanban-style board view: group visible tickets by status for UI columns
+  def board
+    @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team).order(:priority, :created_at)
+    # Ensure all statuses have keys
+    @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }
+    end
+  end
+
+  # Personal dashboard: summary of tickets assigned to current_user grouped by status
+  def dashboard
+    authorize Ticket, :index?
+
+    @tickets = policy_scope(Ticket).where(assignee_id: current_user.id).includes(:requester, :assignee, :team)
+    # counts per status
+    @counts_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }.size
+    end
+
+    # provide a quick list for each status (limit 5)
+    @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }.first(5)
     end
   end
 

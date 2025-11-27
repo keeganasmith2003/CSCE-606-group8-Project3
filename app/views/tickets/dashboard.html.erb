@@ -1,0 +1,16 @@
+<div class="container tickets-dashboard-page">
+  <h1>My Tickets Dashboard</h1>
+
+  <div class="dashboard-summary">
+    <% Ticket.statuses.keys.each do |status| %>
+      <div class="dashboard-status">
+        <h3><%= status.titleize %> (<%= @counts_by_status[status] || 0 %>)</h3>
+        <ul class="dashboard-ticket-list">
+          <% (@tickets_by_status[status] || []).each do |ticket| %>
+            <li><%= link_to ticket.subject, ticket_path(ticket) %> — <small><%= ticket.priority.titleize %></small></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+</div>

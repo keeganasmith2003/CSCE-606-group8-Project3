@@ -398,6 +398,52 @@ input[type="submit"].btn:hover {
   box-sizing: border-box;
 }
 
+/* Kanban board styles */
+.kanban-board {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+
+.kanban-column {
+  background: #f7f7f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  width: 100%;
+  min-height: 8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  padding: 0.75rem 0.75rem;
+  font-weight: 700;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+}
+
+.kanban-column-body {
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ticket-card {
+  background: #fff;
+  border: 1px solid #e9e9ef;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+}
+
+.ticket-subject { margin: 0; font-size: 1rem; }
+.ticket-meta { font-size: 0.85rem; color: #555; display:flex; gap:0.5rem; }
+
+.dashboard-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1rem; }
+.dashboard-status h3 { margin: 0 0 0.5rem 0; }
+.dashboard-ticket-list { margin: 0; padding-left: 1rem; }
+
 @media (min-width: 700px) {
   .form-grid {
     grid-template-columns: 1fr 1fr;

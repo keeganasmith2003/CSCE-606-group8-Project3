@@ -1,5 +1,3 @@
-# features/step_definitions/ticket_steps.rb
-
 # Navigation steps
 Given("I am on the home page") do
   visit root_path
@@ -22,6 +20,14 @@ end
 
 Given("I go to the tickets list page") do
   visit tickets_path
+end
+
+Given("I go to the tickets board page") do
+  visit board_tickets_path
+end
+
+Given("I go to the dashboard page") do
+  visit dashboard_path
 end
 
 Given("I am on the edit page for {string}") do |subject|
@@ -75,6 +81,18 @@ Then("I should not see {string}") do |ticket_title|
   expect(page).not_to have_content(ticket_title)
 end
 
+Then("I should see {string} under the {string} column") do |ticket_subject, column_name|
+  within(all('.kanban-column').find { |c| c.has_text?(column_name) }) do
+    expect(page).to have_content(ticket_subject)
+  end
+end
+
+Then("I should not see {string} under the {string} column") do |ticket_subject, column_name|
+  within(all('.kanban-column').find { |c| c.has_text?(column_name) }) do
+    expect(page).not_to have_content(ticket_subject)
+  end
+end
+
 # Background / fixture steps
 require "securerandom"
 
@@ -82,7 +100,6 @@ Given("the following tickets exist:") do |table|
   table.hashes.each do |original_row|
     row = original_row.dup
 
-    # --- requester (backward compatible) ---
     requester_email = row.delete("requester_email") || "testuser@example.com"
 
     requester = User.find_or_initialize_by(email: requester_email)
@@ -92,7 +109,6 @@ Given("the following tickets exist:") do |table|
     requester.name     ||= "Test Requester"
     requester.save!
 
-    # --- optional assignee (for filtering by assignee) ---
     assignee = nil
     if row["assignee_email"].present?
       assignee_email = row.delete("assignee_email")
@@ -104,14 +120,12 @@ Given("the following tickets exist:") do |table|
       assignee.save!
     end
 
-    # --- core attributes (with sane defaults, same as before) ---
     status   = row["status"].presence   || "open"
     priority = row["priority"].presence || "low"
     category = row["category"].presence || Ticket::CATEGORY_OPTIONS.first
 
-    # --- approval attributes (for filtering by approval_status) ---
     approval_status = row["approval_status"].presence
-    # default to pending if not provided (keeps older tests happy)
+    # default to pending if not provided
     approval_status ||= "pending"
 
     approval_reason = row["approval_reason"].presence
@@ -139,7 +153,9 @@ end
 
 # Assignment-specific steps
 Given("there is an agent named {string}") do |name|
-  FactoryBot.create(:user, :agent, name: name)
+  # Create an agent with a deterministic email based on the name
+  email = "#{name.downcase.tr(' ', '_')}@example.com"
+  FactoryBot.create(:user, :agent, name: name, email: email)
 end
 
 Given("there is a requester named {string}") do |name|

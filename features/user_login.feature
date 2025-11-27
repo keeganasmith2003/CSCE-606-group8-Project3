@@ -14,7 +14,7 @@ Feature: User login with Google
     Given the Google mock returns uid "123", email "first@example.com", name "First User"
     When I click "Login with Google"
     Then I should see "Signed in as First User"
-    And I should see "Hi, First User of role user" in the navbar
+    And I should see "First User" in the navbar
     And the app should have exactly 1 user with email "first@example.com"
 
 

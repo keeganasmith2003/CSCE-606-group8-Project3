@@ -17,7 +17,8 @@ class SessionsController < ApplicationController
 
     user = User.from_omniauth(auth)
     session[:user_id] = user.id
-    redirect_to root_path, notice: "Signed in as #{user.display_name}"
+    # After sign-in, send users to their personal dashboard
+    redirect_to dashboard_path, notice: "Signed in as #{user.display_name}"
   rescue ActiveRecord::RecordInvalid => e
     Rails.logger.error("OAuth user save failed: #{e.message}")
     redirect_to root_path, alert: "Could not sign in."
