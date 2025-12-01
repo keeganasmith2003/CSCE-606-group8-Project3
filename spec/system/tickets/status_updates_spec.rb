@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "Ticket status and comments", type: :system do
   let(:requester) { create(:user, :requester) }
-  let(:staff) { create(:user, :agent) }
+  let(:staff)     { create(:user, :agent) }
 
   before do
     driven_by(:rack_test)
@@ -19,9 +19,11 @@ RSpec.describe "Ticket status and comments", type: :system do
 
     expect(page).to have_css(".status-badge", text: "On Hold")
 
-    fill_in "Comment", with: "Internal triage note"
+    # CHANGED: match label text in the view
+    fill_in "Leave a comment", with: "Internal triage note"
     select "Internal", from: "comment_visibility"
-    click_button "Post Comment"
+    # CHANGED: match submit text in the view
+    click_button "Comment"
 
     expect(page).to have_content("Comment added successfully.")
     within(".comments-list") do
@@ -32,8 +34,8 @@ RSpec.describe "Ticket status and comments", type: :system do
 
   it "restricts requesters to public comments only" do
     ticket = create(:ticket, requester: requester, status: :in_progress)
-    create(:comment, ticket: ticket, author: staff, visibility: :internal, body: "Internal diagnosis")
-    create(:comment, ticket: ticket, author: requester, visibility: :public, body: "Any update?")
+    create(:comment, ticket: ticket, author: staff,     visibility: :internal, body: "Internal diagnosis")
+    create(:comment, ticket: ticket, author: requester, visibility: :public,   body: "Any update?")
 
     sign_in(requester)
     visit ticket_path(ticket)
@@ -45,8 +47,11 @@ RSpec.describe "Ticket status and comments", type: :system do
       expect(page).not_to have_content("Internal diagnosis")
     end
 
-    fill_in "Comment", with: "Thanks for the update"
-    click_button "Post Comment"
+    # CHANGED: same label as above
+    fill_in "Leave a comment", with: "Thanks for the update"
+    # Requesters don’t see visibility select, so just submit
+    # CHANGED: button text
+    click_button "Comment"
 
     expect(page).to have_content("Comment added successfully.")
     within(".comments-list") do

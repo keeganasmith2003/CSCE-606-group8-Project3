@@ -29,7 +29,6 @@ class Ticket < ApplicationRecord
 
   belongs_to :team, optional: true
 
-  validate :assignee_is_member_of_team, if: -> { team_id.present? && assignee_id.present? }
 
 
 

@@ -48,6 +48,23 @@
                 { include_blank: "Anyone" },
                 class: "filter-select" %>
         </div>
+        <div class="form-field">
+          <%= f.label :sort, "Sort by" %>
+          <%= f.select :sort,
+                options_for_select(
+                  [
+                    ["Newest first",                  "created_at_desc"],
+                    ["Oldest first",                  "created_at_asc"],
+                    ["Priority (High → Low)",         "priority_desc"],
+                    ["Priority (Low → High)",         "priority_asc"],
+                    ["Status (Open → Resolved)",      "status_asc"],
+                    ["Status (Resolved → Open)",      "status_desc"]
+                  ],
+                  params[:sort]
+                ),
+                {},
+                class: "filter-select" %>
+        </div>
       </div>
 
       <div class="actions-row">

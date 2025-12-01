@@ -16,6 +16,11 @@
     </div>
 
     <div class="form-field">
+      <%= f.label :personal_email %><br>
+      <%= f.email_field :personal_email, required: true, autofocus: true %>
+    </div>
+
+    <div class="form-field">
       <%= f.label :name %><br>
       <%= f.text_field :name %>
     </div>

@@ -1,13 +1,14 @@
 class UsersController < ApplicationController
   before_action :require_login
   # sysadmin-only actions; allow index/show/profile for regular users
-  before_action :require_sysadmin, except: [ :index, :show, :profile ]
+  before_action :require_sysadmin, except: [ :index, :show, :profile, :edit, :update ]
   before_action :set_user, only: [ :show, :edit, :update, :destroy ]
+
+  before_action :correct_user, only: [ :edit, :update ]
 
   def index
     @users = User.order(:id)
   end
-
   def show; end
 
   # Show current user's profile
@@ -52,10 +53,15 @@ class UsersController < ApplicationController
     @user = User.find(params[:id])
   end
 
-  # Only sysadmins may set role; everyone else (not that they can reach here) gets role filtered out.
+  def correct_user
+    unless sysadmin? || current_user == @user
+      redirect_to root_path, alert: "You are not authorized to edit this profile."
+    end
+  end
+
   def user_params
     permitted = [
-      :provider, :uid, :email, :name, :image_url,
+      :provider, :uid, :email, :personal_email, :name, :image_url, # Added :personal_email here
       :access_token, :refresh_token, :access_token_expires_at
     ]
     permitted << :role if sysadmin?

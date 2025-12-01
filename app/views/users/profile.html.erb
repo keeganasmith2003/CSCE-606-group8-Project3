@@ -1,5 +1,4 @@
 <div class="container user-profile">
-  
 
   <div class="headline-bar">
     <h1>My Profile</h1>
@@ -25,6 +24,14 @@
           <dt>Email</dt>
           <dd><%= mail_to @user.email %></dd>
 
+          <dt>Personal Email</dt>
+          <dd>
+            <% if @user.personal_email.present? %>
+              <%= mail_to @user.personal_email %>
+            <% else %>
+              <span style="color: #999;">Not provided</span>
+            <% end %>
+          </dd>
           <dt>Role</dt>
           <dd><span class="role-badge role-<%= @user.role %>"><%= @user.role.titleize %></span></dd>
 

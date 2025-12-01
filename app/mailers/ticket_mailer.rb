@@ -5,6 +5,8 @@ class TicketMailer < ApplicationMailer
         @ticket = params[:ticket]
         @user = @ticket.requester
 
-        mail(to: @user.email, subject: "[Ticket ##{@ticket.id}] Update: #{@ticket.subject}")
+        recipient_email = @user.personal_email.present? ? @user.personal_email : @user.email
+
+        mail(to: recipient_email, subject: "[Ticket ##{@ticket.id}] Update: #{@ticket.subject}")
     end
 end

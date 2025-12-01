@@ -21,6 +21,11 @@ RSpec.describe "tickets/show", type: :view do
 
     ticket_policy_double = ticket_policy
     comment_policy_double = comment_policy
+    allow(ticket_policy).to receive(:update?).and_return(true)
+    allow(ticket_policy).to receive(:close?).and_return(false)
+    allow(ticket_policy).to receive(:change_status?).and_return(false)
+    allow(ticket_policy).to receive(:assign?).and_return(false)
+    allow(ticket_policy).to receive(:destroy?).and_return(false)
     view.singleton_class.send(:define_method, :policy) do |record|
       case record
       when Ticket

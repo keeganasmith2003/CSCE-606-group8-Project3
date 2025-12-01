@@ -14,6 +14,7 @@
 puts "Flushing existing data..."
 Comment.delete_all
 Ticket.delete_all
+TeamMembership.delete_all
 Setting.delete_all
 User.delete_all
 

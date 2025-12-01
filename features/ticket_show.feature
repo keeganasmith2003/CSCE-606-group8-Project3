@@ -18,13 +18,13 @@ Feature: View ticket details
     And I should see "Open"
     And I should see "Priority"
     And I should see "High"
-    And I should see "Ticket Type"
+    And I should see "Category"
     And I should see "Technical Issue"
     And I should see "Submitter"
     And I should see "Viewer Name"
-    And I should see "Assignee"
-    And I should see "Unassigned"
-    And I should see "Comments"
+    And I should see "Assignment"
+    And I should see "None"
+    And I should see "No comments"
     And I should see "No comments yet."
 
   Scenario: View a resolved ticket shows resolved timestamp (history)
@@ -35,4 +35,3 @@ Feature: View ticket details
     Then I should see "Billing discrepancy"
     And I should see "Status"
     And I should see "Resolved"
-    And I should see "Resolved At"

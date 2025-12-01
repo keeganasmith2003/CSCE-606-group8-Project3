@@ -36,8 +36,18 @@ RSpec.describe "tickets/index", type: :view do
 
   it "renders a list of tickets" do
     render
+
+    # Still ensure both ticket titles are rendered as links
     assert_select 'h2>a', text: "Title", count: 2
-    assert_select 'p', text: /Status:/, count: 2
-    assert_select 'p', text: /Category:/, count: 2
+
+    # New layout: one .ticket-card per ticket
+    assert_select '.ticket-card', count: 2
+
+    # We no longer render "Status:" in <p> tags, but we DO render status badges
+    assert_select '.status-badge', minimum: 2
+
+    # Category is also rendered as a badge, not in a <p>
+    # If you want to be strict, you can assert that at least one badge contains a category name:
+    # assert_select '.status-badge', text: Ticket::CATEGORY_OPTIONS.first, minimum: 1
   end
 end

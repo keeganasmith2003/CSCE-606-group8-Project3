@@ -93,7 +93,7 @@ class TicketsController < ApplicationController
         begin
           @ticket.approve!(current_user)
           TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-          
+
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not approve ticket: #{e.message}")
@@ -254,8 +254,35 @@ class TicketsController < ApplicationController
         )
       end
     end
+    apply_sort!
   end
 
+  def apply_sort!
+    # One param that encodes both field + direction to keep the UI simple
+    sort_param = params[:sort].presence || "created_at_desc"
+
+    @tickets =
+      case sort_param
+      when "created_at_asc"
+        @tickets.order(created_at: :asc)
+      when "created_at_desc"
+        @tickets.order(created_at: :desc)
+      when "priority_asc"
+        # low → high; tie-break by newest first
+        @tickets.order(priority: :asc, created_at: :desc)
+      when "priority_desc"
+        # high → low; tie-break by newest first
+        @tickets.order(priority: :desc, created_at: :desc)
+      when "status_asc"
+        # enum order: open, in_progress, on_hold, resolved
+        @tickets.order(status: :asc, created_at: :desc)
+      when "status_desc"
+        @tickets.order(status: :desc, created_at: :desc)
+      else
+        # Safe default
+        @tickets.order(created_at: :desc)
+      end
+  end
 
   def load_filter_options
     # You can tweak these to be more scoped if desired

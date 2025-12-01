@@ -1,14 +1,15 @@
 <div class="ticket-show container">
   <div class="headline-bar">
     <div class="headline-left">
-      <span class="status-badge status-<%= @ticket.status %>" style="font-size: 0.9rem; vertical-align: middle;"><%= @ticket.status.titleize %></span>
+      <span class="status-badge status-<%= @ticket.status %>" style="font-size: 0.9rem; vertical-align: middle;">Status: <%= @ticket.status.titleize %></span>
       <h1 style="display: inline-block; margin: 0 0 0 0.5rem; vertical-align: middle; font-size: 1.5rem;"><%= @ticket.subject %></h1>
     </div>
     <div class="headline-right">
       <%= link_to "Back", tickets_path, class: "btn btn-secondary" %>
-      <% if policy(@ticket).edit? %>
+      <% if policy(@ticket).update? %>
         <%= link_to "Edit", edit_ticket_path(@ticket), class: "btn btn-secondary" %>
       <% end %>
+
       <% if policy(@ticket).close? %>
         <%= button_to "Resolve", close_ticket_path(@ticket), method: :patch, data: { confirm: "Mark resolved?" }, class: "btn btn-primary" %>
       <% end %>
@@ -99,7 +100,7 @@
                <label class="sidebar-label" style="display:block; margin-bottom:0.25rem;">Update Status</label>
                <div style="display:flex; gap:0.5rem;">
                  <%= form.select :status, Ticket.statuses.keys.map { |key| [key.titleize, key] }, {}, { style: "flex-grow:1; width:100%;" } %>
-                 <%= form.submit "Go", class: "btn btn-sm" %>
+                 <%= form.submit "Update Status", class: "btn btn-sm" %>
                </div>
              <% end %>
           </div>
