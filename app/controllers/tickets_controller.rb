@@ -93,7 +93,7 @@ class TicketsController < ApplicationController
         begin
           @ticket.approve!(current_user)
           TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-          
+
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not approve ticket: #{e.message}")
@@ -197,16 +197,29 @@ class TicketsController < ApplicationController
     end
 
     # Apply assignee if the key is present (even when blank)
+    # When assignee_param is "" (from blank select option), convert to nil
     if ticket_params_raw.key?(:assignee_id)
-      updates[:assignee_id] = assignee_param.presence # "" -> nil
+      assignee_param = assignee_param.to_s.strip
+      updates[:assignee_id] = assignee_param.presence # "" -> nil, "123" -> "123"
     end
 
-    # If team is changing but caller didn't include assignee_id,
-    # and current assignee doesn't belong to the new team, clear it to pass validation.
-    if updates.key?(:team_id) && updates[:team_id].present? && !ticket_params_raw.key?(:assignee_id)
+    # If team is changing, ensure assignee is cleared when appropriate to avoid validation
+    if updates.key?(:team_id) && updates[:team_id].present?
       new_team = Team.find(updates[:team_id])
-      if @ticket.assignee_id.present? && !new_team.members.exists?(id: @ticket.assignee_id)
-        updates[:assignee_id] = nil
+
+      if ticket_params_raw.key?(:assignee_id)
+        # If an assignee id was provided but the assignee doesn't belong to the new team, clear it.
+        if updates[:assignee_id].present?
+          updates[:assignee_id] = nil unless new_team.members.exists?(id: updates[:assignee_id])
+        else
+          # Explicit blank was provided -> ensure nil
+          updates[:assignee_id] = nil
+        end
+      else
+        # No assignee param provided: if current assignee doesn't belong to the new team, clear it.
+        if @ticket.assignee_id.present? && !new_team.members.exists?(id: @ticket.assignee_id)
+          updates[:assignee_id] = nil
+        end
       end
     end
 
@@ -217,6 +230,45 @@ class TicketsController < ApplicationController
       # Show why it failed (e.g., "Assignee must belong to the selected team")
       message = @ticket.errors.full_messages.to_sentence.presence || "No assignment changes provided."
       redirect_to @ticket, alert: message
+    end
+  end
+
+  # Kanban-style board view: group visible tickets by status for UI columns
+  def board
+    @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team).order(:priority, :created_at)
+    # Ensure all statuses have keys
+    @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }
+    end
+  end
+
+  # Personal dashboard: summary of tickets assigned to current_user grouped by status
+  def dashboard
+    authorize Ticket, :index?
+
+    # Show tickets assigned to the current user _or_ assigned to any of the user's teams.
+    # Use direct Ticket queries (not policy_scope) because policy_scope for regular users
+    # restricts to requester-only, which would hide assigned tickets.
+    team_ids = current_user.teams.select(:id)
+    @tickets = Ticket.where(assignee_id: current_user.id)
+                     .or(Ticket.where(team_id: team_ids))
+                     .includes(:requester, :assignee, :team)
+                     .order(updated_at: :desc)
+
+    @open_tickets = @tickets.where(status: :open)
+    @open_tickets_count = @open_tickets.count
+
+    # 5 most recently updated tickets
+    @recent_tickets = @tickets.limit(5)
+
+    # counts per status
+    @counts_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }.size
+    end
+
+    # provide a quick list for each status (limit 5)
+    @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
+      h[s] = @tickets.select { |t| t.status == s }.first(5)
     end
   end
 
@@ -247,7 +299,6 @@ class TicketsController < ApplicationController
           q: q
         )
       else
-        # SQLite (and others): emulate ILIKE with LOWER(...) LIKE ...
         @tickets = @tickets.where(
           "LOWER(tickets.subject) LIKE :q OR LOWER(tickets.description) LIKE :q",
           q: q.downcase
@@ -258,7 +309,6 @@ class TicketsController < ApplicationController
 
 
   def load_filter_options
-    # You can tweak these to be more scoped if desired
     @status_options         = Ticket.statuses.keys
     @approval_status_options = Ticket.approval_statuses.keys
     @category_options       = Ticket.where.not(category: [ nil, "" ]).distinct.order(:category).pluck(:category)

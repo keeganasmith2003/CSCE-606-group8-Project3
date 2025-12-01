@@ -55,7 +55,7 @@ class Ticket < ApplicationRecord
       self.closed_at = nil
     end
   end
-  # Convenience methods for staff actions
+
   public
 
   def approve!(user)
@@ -73,5 +73,51 @@ class Ticket < ApplicationRecord
     self.approval_reason = reason
     self.approved_at = Time.current
     save!
+  end
+
+  # Class methods for dashboard metrics
+  class << self
+    # Returns resolved tickets grouped by week for the last 30 days
+    # Example: { "Week 1" => 5, "Week 2" => 3, "Week 3" => 2 }
+    def completion_rate_by_week(user = nil, days = 30)
+      thirty_days_ago = days.days.ago.beginning_of_week
+      scope = where(status: :resolved).where("closed_at >= ?", thirty_days_ago)
+      scope = scope.where(assignee_id: user.id) if user.present?
+
+      grouped = scope.group_by { |t| t.closed_at.strftime("%Y-W%V") }.sort
+      labels = []
+      data = []
+
+      if grouped.empty?
+        # Return empty weeks for the period
+        (0...4).each do |i|
+          week_start = (days.days.ago.beginning_of_week + (i * 7.days)).strftime("W%V")
+          labels << week_start
+          data << 0
+        end
+      else
+        grouped.each do |week, tickets|
+          labels << week
+          data << tickets.size
+        end
+      end
+
+      { labels: labels, data: data }
+    end
+
+    # Returns tickets grouped by category
+    # Example: { "Technical Issue" => 10, "Feature Request" => 5 }
+    def tickets_by_category
+      group(:category).count
+    end
+
+    # Returns average resolution time in hours across all resolved tickets
+    def average_resolution_time
+      resolved_tickets = where(status: :resolved).where("closed_at IS NOT NULL")
+      return 0 if resolved_tickets.empty?
+
+      total_hours = resolved_tickets.sum { |t| ((t.closed_at - t.created_at) / 3600).round(2) }
+      (total_hours / resolved_tickets.count).round(2)
+    end
   end
 end

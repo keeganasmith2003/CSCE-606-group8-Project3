@@ -4,7 +4,7 @@ RSpec.describe "Users", type: :request do
   # Helper: sign in through OmniAuth callback as the given user
   def sign_in_as(user)
     mock_google_auth(uid: user.uid, email: user.email, name: user.name || "Tester")
-    get "/auth/google_oauth2/callback" # SessionsController#create
+    get "/auth/google_oauth2/callback"
     expect(session[:user_id]).to eq(user.id)
   end
 
@@ -56,8 +56,7 @@ RSpec.describe "Users", type: :request do
 
         post users_path, params: { user: { email: "new@example.com", provider: provider, uid: "xyz123" } }
         expect(response).to redirect_to(root_path)
-        follow_redirect!
-        expect(response.body).to include("Not authorized")
+        expect(flash[:alert]).to eq("Not authorized.")
       end
     end
 

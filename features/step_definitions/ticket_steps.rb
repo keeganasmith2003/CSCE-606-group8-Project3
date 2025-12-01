@@ -1,5 +1,3 @@
-# features/step_definitions/ticket_steps.rb
-
 # Navigation steps
 Given("I am on the home page") do
   visit root_path
@@ -22,6 +20,14 @@ end
 
 Given("I go to the tickets list page") do
   visit tickets_path
+end
+
+Given("I go to the tickets board page") do
+  visit board_tickets_path
+end
+
+Given("I go to the dashboard page") do
+  visit personal_dashboard_path
 end
 
 Given("I am on the edit page for {string}") do |subject|
@@ -75,6 +81,18 @@ Then("I should not see {string}") do |ticket_title|
   expect(page).not_to have_content(ticket_title)
 end
 
+Then("I should see {string} under the {string} column") do |ticket_subject, column_name|
+  within(all('.kanban-column').find { |c| c.has_text?(column_name) }) do
+    expect(page).to have_content(ticket_subject)
+  end
+end
+
+Then("I should not see {string} under the {string} column") do |ticket_subject, column_name|
+  within(all('.kanban-column').find { |c| c.has_text?(column_name) }) do
+    expect(page).not_to have_content(ticket_subject)
+  end
+end
+
 # Background / fixture steps
 require "securerandom"
 
@@ -82,7 +100,6 @@ Given("the following tickets exist:") do |table|
   table.hashes.each do |original_row|
     row = original_row.dup
 
-    # --- requester (backward compatible) ---
     requester_email = row.delete("requester_email") || "testuser@example.com"
 
     requester = User.find_or_initialize_by(email: requester_email)
@@ -92,7 +109,6 @@ Given("the following tickets exist:") do |table|
     requester.name     ||= "Test Requester"
     requester.save!
 
-    # --- optional assignee (for filtering by assignee) ---
     assignee = nil
     if row["assignee_email"].present?
       assignee_email = row.delete("assignee_email")
@@ -104,14 +120,12 @@ Given("the following tickets exist:") do |table|
       assignee.save!
     end
 
-    # --- core attributes (with sane defaults, same as before) ---
     status   = row["status"].presence   || "open"
     priority = row["priority"].presence || "low"
     category = row["category"].presence || Ticket::CATEGORY_OPTIONS.first
 
-    # --- approval attributes (for filtering by approval_status) ---
     approval_status = row["approval_status"].presence
-    # default to pending if not provided (keeps older tests happy)
+    # default to pending if not provided
     approval_status ||= "pending"
 
     approval_reason = row["approval_reason"].presence
@@ -139,7 +153,15 @@ end
 
 # Assignment-specific steps
 Given("there is an agent named {string}") do |name|
-  FactoryBot.create(:user, :agent, name: name)
+  # Create an agent with a deterministic email based on the name
+  # Reuse the team helper to ensure consistent user creation across step files
+  # (find_or_create_agent! is defined in teams_steps.rb)
+  begin
+    find_or_create_agent!(name)
+  rescue NameError
+    email = "#{name.downcase.tr(' ', '_')}@example.com"
+    FactoryBot.create(:user, :agent, name: name, email: email)
+  end
 end
 
 Given("there is a requester named {string}") do |name|
@@ -156,16 +178,22 @@ Given("the assignment strategy is set to {string}") do |strategy|
 end
 
 Given("I am logged in as agent {string}") do |name|
+  # Ensure the user exists
   user = User.find_by(name: name)
-  if user
-    OmniAuth.config.test_mode = true
-    OmniAuth.config.mock_auth[:google_oauth2] = OmniAuth::AuthHash.new(
-      provider: "google_oauth2",
-      uid: user.uid,
-      info: { email: user.email, name: user.name }
-    )
-    visit "/auth/google_oauth2"
+  unless user
+    # If not found
+    begin
+      user = find_or_create_agent!(name)
+    rescue NameError
+      email = "#{name.downcase.tr(' ', '_')}@example.com"
+      user = FactoryBot.create(:user, :agent, name: name, email: email)
+    end
   end
+
+  # the OmniAuth login flow
+  ensure_omniauth_mock_for(user) if defined?(ensure_omniauth_mock_for)
+  visit "/auth/google_oauth2/callback"
+  @current_user = user
 end
 
 When("I visit the ticket page") do
@@ -196,7 +224,6 @@ When("{string} creates a new ticket") do |name|
   requester = User.find_by(name: name)
   if requester
     # Simulate the user being logged in by setting current_user context
-    # Since we're using OmniAuth, we need to create the ticket directly
     ticket = Ticket.new(
       subject: 'New Ticket',
       description: 'Ticket description',
@@ -239,15 +266,12 @@ When("I select {string} from {string}") do |option, field_label|
   begin
     select option, from: field_label
   rescue Capybara::ElementNotFound
-    # Fallback: try titleized version for enum dropdowns (e.g., "open" → "Open")
     begin
       select option.titleize, from: field_label
     rescue Capybara::ElementNotFound => e
-      # For status, try capitalized (e.g., "closed" → "Closed")
       begin
         select option.capitalize, from: field_label
       rescue Capybara::ElementNotFound
-        # Helpful debug output when all attempts fail
         raise Capybara::ElementNotFound, "Unable to find option '#{option}' (or '#{option.titleize}' or '#{option.capitalize}') for field '#{field_label}'. Original error: #{e.message}"
       end
     end

@@ -5,7 +5,10 @@ class TicketPolicy < ApplicationPolicy
 
   def show?
     return true if user.admin? || user.agent?
-    user.requester? && record.requester == user
+    # Allow requesters to view their own tickets and assignees to view tickets assigned to them
+    return true if user.requester? && record.requester == user
+    return true if record.assignee == user
+    false
   end
 
   def create?

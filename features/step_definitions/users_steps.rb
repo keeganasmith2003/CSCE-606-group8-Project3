@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 # ---------- Seed helpers ----------
 
 Given("there is a user in the database with email {string} and role {string} named {string}") do |email, role, name|
@@ -79,7 +77,6 @@ When("I delete the user with email {string}") do |email|
     if Capybara.current_driver == Capybara.javascript_driver
       accept_confirm { click_button "Delete" }
     else
-      # rack_test cannot handle modals; just click (data-confirm is ignored without JS)
       click_button "Delete"
     end
   end
@@ -88,14 +85,9 @@ end
 # ---------- Authorization assertion ----------
 
 Then("I should be denied access") do
-  # Your require_sysadmin could redirect with flash or render 403.
-  # Be flexible: either see a flash, or the page returns 403/401.
-  denied = page.has_content?("Not authorized") ||
+  denied = defined?(@authorization_error) && @authorization_error ||
+           page.has_content?("Not authorized") ||
            page.has_content?("You are not authorized") ||
            (page.respond_to?(:status_code) && [ 401, 403 ].include?(page.status_code))
   expect(denied).to be(true), "Expected an authorization failure (flash or 401/403), but didn't detect one"
 end
-
-# When('I select {string} from {string}') do |option, field_label|
-#   select option, from: field_label
-# end

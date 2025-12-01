@@ -1,0 +1,85 @@
+<div class="container tickets-dashboard-page">
+  <h1>My Tickets Dashboard</h1>
+
+  <div class="dashboard-open-section">
+    <div class="open-tickets-card">
+      <h2>My Open Tickets</h2>
+      <p class="open-count"><%= @open_tickets_count %></p>
+    </div>
+  </div>
+
+  <div class="dashboard-recent-section">
+    <h2>5 Most Recently Updated Tickets</h2>
+    <div class="recent-tickets-list">
+      <% if @recent_tickets.any? %>
+        <% @recent_tickets.each do |ticket| %>
+          <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
+        <% end %>
+      <% else %>
+        <p class="no-tickets-message">No tickets assigned to you yet.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="dashboard-summary">
+    <h2>Tickets by Status</h2>
+    <% Ticket.statuses.keys.each do |status| %>
+      <div class="dashboard-status">
+        <h3><%= status.titleize %> (<%= @counts_by_status[status] || 0 %>)</h3>
+        <div class="dashboard-ticket-list">
+          <% (@tickets_by_status[status] || []).each do |ticket| %>
+            <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .dashboard-open-section {
+    margin: 2rem 0;
+  }
+
+  .open-tickets-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+
+  .open-tickets-card h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+  }
+
+  .open-count {
+    margin: 0;
+    font-size: 3rem;
+    font-weight: 700;
+  }
+
+  .dashboard-recent-section {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .recent-tickets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  .no-tickets-message {
+    color: #999;
+    font-style: italic;
+    margin: 1rem 0;
+  }
+</style>

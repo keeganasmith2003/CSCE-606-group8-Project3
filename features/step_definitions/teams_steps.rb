@@ -7,6 +7,7 @@ def create_user!(name:, email:, role:)
     name: name
   )
 end
+
 def ensure_omniauth_mock_for(user)
   OmniAuth.config.test_mode = true
   OmniAuth.config.silence_get_warning = true
@@ -21,6 +22,7 @@ def ensure_omniauth_mock_for(user)
     }
   )
 end
+
 Given('a staff user {string} exists with email {string}') do |name, email|
   create_user!(name: name, email: email, role: :staff)
 end
@@ -61,7 +63,7 @@ When('I login as {string}') do |email|
   user = User.find_by!(email: email)
   ensure_omniauth_mock_for(user)
   visit "/auth/google_oauth2/callback"
-  expect(page).to have_current_path(root_path)
+  expect(page).to have_current_path(personal_dashboard_path)
 end
 
 
@@ -87,9 +89,24 @@ end
 # ---------- Ticket assignment UI interactions ----------
 
 When('I select {string} from the team dropdown') do |team_name|
-  within(".assign-section") do
-    # Label in your view: "Assign to team:"
-    select team_name, from: "Assign to team:"
+  if page.has_css?('.assign-section')
+    within('.assign-section') do
+      begin
+        select team_name, from: 'Assign to team:'
+      rescue Capybara::ElementNotFound
+        if page.has_select?('ticket[team_id]')
+          select team_name, from: 'ticket[team_id]'
+        else
+          raise
+        end
+      end
+    end
+  else
+    if page.has_select?('ticket[team_id]')
+      select team_name, from: 'ticket[team_id]'
+    else
+      select team_name, from: 'Assign to team:'
+    end
   end
 end
 
@@ -101,10 +118,6 @@ Then('I should see one of:') do |table|
   expect(messages.any? { |m| page.has_content?(m) }).to be(true),
     -> { "Expected page to include one of:\n  - #{messages.join("\n  - ")}\nBut got:\n#{page.text}" }
 end
-
-# features/step_definitions/team_assignment_steps.rb
-
-# features/step_definitions/team_assignment_steps.rb
 
 # ---- helpers ----
 def find_or_create_agent!(name)
@@ -164,7 +177,6 @@ When('I leave the agent dropdown unassigned') do
       if page.has_select?('Assign to agent:', with_options: [ 'Unassigned' ])
         select 'Unassigned', from: 'Assign to agent:'
       else
-        # Fallback: clear the select via setting empty value (RackTest)
         find('#ticket_assignee_id', visible: :all).set('')
       end
     end
@@ -180,10 +192,9 @@ end
 # ---- Then steps ----
 
 Then("the ticket's team should be {string}") do |team_name|
-  ticket = current_ticket!     # <- robust lookup
+  ticket = current_ticket!
   ticket.reload
   expect(ticket.team&.name).to eq(team_name)
-  # Optional UI assertion
   expect(page.body).to include(team_name)
 end
 
@@ -191,6 +202,5 @@ Then('the ticket should be unassigned to any agent') do
   ticket = current_ticket!
   ticket.reload
   expect(ticket.assignee).to be_nil
-  # Optional UI assertion (often shows "Unassigned")
   expect(page.body).to match(/Assignee:\s*(Unassigned|<\/dt>\s*<dd>\s*Unassigned)/)
 end

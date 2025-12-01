@@ -44,14 +44,9 @@ Feature: Assign Ticket (with teams)
     When I visit the ticket page
     And I select "Ops" from the team dropdown
     And I leave the agent dropdown unassigned
-    And I press "Assign" within the assignment form
+    And I press "Update Assignment" within the assignment form
     Then I should see "Ticket assignment updated."
     And the ticket's team should be "Ops"
-
-
-  
-
-  # --- Your original auto-assign stories, unchanged (still work with teams present) ---
 
   Scenario: Auto-assign ticket on creation when round-robin is enabled
     Given the assignment strategy is set to "round_robin"
