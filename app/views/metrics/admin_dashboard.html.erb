@@ -1,0 +1,206 @@
+<div class="container admin-dashboard">
+  <h1>System Performance Dashboard</h1>
+
+  <div class="admin-metrics-summary">
+    <div class="admin-metric-card">
+      <h3>Total Tickets</h3>
+      <p class="metric-value"><%= @total_tickets %></p>
+    </div>
+    <div class="admin-metric-card">
+      <h3>Open Tickets</h3>
+      <p class="metric-value"><%= @open_count %></p>
+    </div>
+    <div class="admin-metric-card">
+      <h3>Resolved Tickets</h3>
+      <p class="metric-value"><%= @resolved_count %></p>
+    </div>
+    <div class="admin-metric-card">
+      <h3>Avg Resolution Time</h3>
+      <p class="metric-full-title" style="font-size:0.85rem; color:#666; margin:0.25rem 0 0 0">Average Resolution Time</p>
+      <p class="metric-value"><%= number_with_precision(@average_resolution_time, precision: 1) %> hrs</p>
+    </div>
+  </div>
+
+  <div class="admin-charts-grid">
+    <div class="admin-chart-container">
+      <h2>Tickets by Category</h2>
+      <canvas id="categoryChart" width="300" height="300"></canvas>
+      <ul class="category-list">
+        <% total = @tickets_by_category.values.sum %>
+        <% @tickets_by_category.each do |cat, cnt| %>
+          <% percent = total > 0 ? ((cnt.to_f / total) * 100).round : 0 %>
+          <li><strong><%= cat %></strong>: <%= cnt %> (<%= percent %>% | <%= "#{cnt}/#{total}" %>)</li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="admin-status-summary">
+      <h2>Status Summary</h2>
+      <table class="admin-status-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Count</th>
+            <th>Percentage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% Ticket.statuses.keys.each do |status| %>
+            <% count = Ticket.where(status: status).count %>
+            <% percentage = @total_tickets > 0 ? ((count.to_f / @total_tickets) * 100).round(1) : 0 %>
+            <tr>
+              <td><%= status.titleize %></td>
+              <td><%= count %></td>
+              <td><%= number_to_percentage(percentage, precision: 1) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('categoryChart').getContext('2d');
+  const categories = <%= raw @tickets_by_category.keys.to_json %>;
+  const counts = <%= raw @tickets_by_category.values.to_json %>;
+  
+  const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+
+  const chart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: categories,
+      datasets: [{
+        data: counts,
+        backgroundColor: colors.slice(0, categories.length),
+        borderColor: '#fff',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'bottom'
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12,
+          callbacks: {
+            label: function(context) {
+              const label = context.label || '';
+              const value = context.parsed || 0;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((value / total) * 100).toFixed(1);
+              return label + ': ' + value + ' (' + percentage + '%)';
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
+
+<style>
+  .admin-dashboard {
+    padding: 2rem 0;
+  }
+
+  .admin-metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .admin-metric-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .admin-metric-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    color: #666;
+    font-weight: 600;
+  }
+
+  .metric-value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .admin-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+
+  @media (max-width: 900px) {
+    .admin-charts-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .admin-chart-container {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .admin-chart-container h2 {
+    margin-top: 0;
+  }
+
+  .admin-status-summary {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .admin-status-summary h2 {
+    margin-top: 0;
+  }
+
+  .admin-status-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+  }
+
+  .admin-status-table thead {
+    background: #f5f5f5;
+  }
+
+  .admin-status-table th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .admin-status-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .admin-status-table tbody tr:hover {
+    background: #f9f9f9;
+  }
+</style>

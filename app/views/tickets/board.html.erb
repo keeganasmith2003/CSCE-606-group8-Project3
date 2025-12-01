@@ -1,0 +1,16 @@
+<div class="container tickets-board-page">
+  <h1>Tickets Board</h1>
+
+  <div class="kanban-board">
+    <% Ticket.statuses.keys.each do |status| %>
+      <div class="kanban-column">
+        <div class="kanban-column-header"><%= status.titleize %></div>
+        <div class="kanban-column-body">
+          <% @tickets_by_status[status].each do |ticket| %>
+            <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

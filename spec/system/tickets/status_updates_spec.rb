@@ -14,13 +14,22 @@ RSpec.describe "Ticket status and comments", type: :system do
     sign_in(staff)
     visit ticket_path(ticket)
 
+<<<<<<< HEAD
     select "On Hold", from: "ticket_status"
+=======
+    select "On Hold", from: "ticket[status]"
+>>>>>>> d7f7a33e94ac097e6f0d21e753bd97743e7d1fa6
     click_button "Go"
 
     expect(page).to have_css(".status-badge", text: "On Hold")
 
+<<<<<<< HEAD
     fill_in "Leave a comment", with: "Internal triage note"
     select "Internal", from: "comment_visibility"
+=======
+    fill_in "comment[body]", with: "Internal triage note"
+    select "Internal", from: "comment[visibility]"
+>>>>>>> d7f7a33e94ac097e6f0d21e753bd97743e7d1fa6
     click_button "Comment"
 
     expect(page).to have_content("Internal triage note")
@@ -45,7 +54,11 @@ RSpec.describe "Ticket status and comments", type: :system do
       expect(page).not_to have_content("Internal diagnosis")
     end
 
+<<<<<<< HEAD
     fill_in "Leave a comment", with: "Thanks for the update"
+=======
+    fill_in "comment[body]", with: "Thanks for the update"
+>>>>>>> d7f7a33e94ac097e6f0d21e753bd97743e7d1fa6
     click_button "Comment"
 
     within(".comments-list") do

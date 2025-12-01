@@ -1,0 +1,146 @@
+<div class="container metrics-dashboard">
+  <h1>My Ticket Metrics</h1>
+
+  <div class="metrics-summary">
+    <div class="metric-card">
+      <h3>Total Assigned</h3>
+      <p class="metric-value"><%= @total_assigned %></p>
+    </div>
+    <div class="metric-card">
+      <h3>Open</h3>
+      <p class="metric-value"><%= @open_tickets_count %></p>
+    </div>
+    <div class="metric-card">
+      <h3>Resolved</h3>
+      <p class="metric-value"><%= @resolved_tickets_count %></p>
+    </div>
+    <% if @total_assigned > 0 %>
+      <div class="metric-card">
+        <h3>Resolution Rate</h3>
+        <p class="metric-value"><%= number_to_percentage((@resolved_tickets_count.to_f / @total_assigned) * 100, precision: 1) %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="metrics-chart-container">
+    <h2>Tickets Resolved Per Week (Last 30 Days)</h2>
+    <canvas id="completionChart" width="400" height="100"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('completionChart').getContext('2d');
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @completion_data[:labels].to_json %>,
+      datasets: [{
+        label: 'Tickets Resolved',
+        data: <%= raw @completion_data[:data].to_json %>,
+        borderColor: '#4CAF50',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: '#4CAF50',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top'
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          padding: 12,
+          titleFont: { size: 14 },
+          bodyFont: { size: 13 },
+          callbacks: {
+            label: function(context) {
+              return 'Resolved: ' + context.parsed.y + ' ticket(s)';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          },
+          title: {
+            display: true,
+            text: 'Number of Resolved Tickets'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Week'
+          }
+        }
+      }
+    }
+  });
+</script>
+
+<style>
+  .metrics-dashboard {
+    padding: 2rem 0;
+  }
+
+  .metrics-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .metric-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .metric-card h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    color: #666;
+    font-weight: 600;
+  }
+
+  .metric-value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+  }
+
+  .metrics-chart-container {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  .metrics-chart-container h2 {
+    margin-top: 0;
+  }
+</style>

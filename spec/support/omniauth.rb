@@ -21,7 +21,6 @@ module OmniauthHelpers
 end
 
 RSpec.configure do |config|
-  # make it available to request and system specs
   config.include OmniauthHelpers, type: :request
   config.include OmniauthHelpers, type: :system
 
@@ -38,7 +37,8 @@ RSpec.configure do |config|
     def sign_in(user)
       mock_google_auth(uid: user.uid, email: user.email, name: user.name || "Tester")
       visit "/auth/google_oauth2/callback"
-      expect(page).to have_current_path(root_path)
+  # After sign-in, the personal dashboard is the landing page for authenticated users
+  expect(page).to have_current_path(personal_dashboard_path)
     end
   end
 

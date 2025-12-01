@@ -18,8 +18,7 @@ RSpec.describe "ApplicationController behaviors", type: :request do
 
       get new_user_path
       expect(response).to redirect_to(root_path)
-      follow_redirect!
-      expect(response.body).to include("Not authorized")
+      expect(flash[:alert]).to eq("Not authorized.")
     end
   end
 end

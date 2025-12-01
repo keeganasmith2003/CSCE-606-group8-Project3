@@ -1,8 +1,7 @@
 class SessionsController < ApplicationController
-  # OmniAuth callback can be POST; skip CSRF just for this action if needed.
   skip_forgery_protection only: :create
 
-  # Optional: a simple "Login" action that starts Google OAuth.
+  # "Login" action that starts Google OAuth.
   def new
     redirect_to "/auth/google_oauth2"
   end
@@ -17,7 +16,8 @@ class SessionsController < ApplicationController
 
     user = User.from_omniauth(auth)
     session[:user_id] = user.id
-    redirect_to root_path, notice: "Signed in as #{user.display_name}"
+  # After sign-in, send users to their personal dashboard
+  redirect_to personal_dashboard_path, notice: "Signed in as #{user.display_name}"
   rescue ActiveRecord::RecordInvalid => e
     Rails.logger.error("OAuth user save failed: #{e.message}")
     redirect_to root_path, alert: "Could not sign in."

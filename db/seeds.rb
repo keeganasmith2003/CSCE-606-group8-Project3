@@ -12,8 +12,12 @@
 
 # Flush existing data to ensure a clean reseed (respect FK constraints)
 puts "Flushing existing data..."
+# Delete in dependency order to avoid foreign key constraint failures.
+# Remove comments and tickets, then team memberships and teams, then settings and users.
 Comment.delete_all
 Ticket.delete_all
+TeamMembership.delete_all
+Team.delete_all
 Setting.delete_all
 User.delete_all
 
@@ -109,6 +113,16 @@ admin2 = seed_user!(
   role:      :sysadmin
 )
 
+# Add requested user Shreya Sahni
+shreya = seed_user!(
+  provider:  "google_oauth2",
+  uid:       "shreya",
+  email:     "shreya.sahni@tamu.edu",
+  name:      "Shreya Sahni",
+  image_url: "https://example.com/shreya.png",
+  role:      :staff
+)
+
 puts "Users seeded: #{User.count}"
 
 # === Teams & Memberships ===
@@ -122,6 +136,8 @@ end
 # Ensure memberships so Ticket validation passes (assignee must belong to team)
 TeamMembership.find_or_create_by!(team: support, user: agent1)
 TeamMembership.find_or_create_by!(team: ops,     user: agent2)
+# Ensure Shreya is a member of Support so tickets assigned to her pass validation
+TeamMembership.find_or_create_by!(team: support, user: shreya)
 
 # Optional: cross-staff membership if you want them on both teams
 # TeamMembership.find_or_create_by!(team: support, user: agent2)
@@ -202,7 +218,7 @@ tickets_attrs = [
     status:       :in_progress,
     priority:     :low,
     requester:    requester3,
-    assignee:     nil,
+    assignee:     shreya,
     category:     "Feature Request"
   },
   {

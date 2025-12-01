@@ -72,6 +72,7 @@ group :test do
   gem "simplecov", require: false
   gem "rack_session_access"
   gem "pundit-matchers"
+  gem "rails-controller-testing"  # For assigns and render_template in request specs
 end
 gem "pg", "~> 1.5"
 
@@ -82,3 +83,6 @@ gem "omniauth-google-oauth2"
 gem "dotenv-rails"
 
 gem "pundit", "~> 2.5"
+
+# Charting library for dashboards (via CDN in views)
+# using Chart.js from CDN, no gem needed

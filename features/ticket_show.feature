@@ -17,11 +17,17 @@ Feature: View ticket details
     And I should see "Open"
     And I should see "Priority"
     And I should see "High"
+<<<<<<< HEAD
     And I should see "Category"
     And I should see "Technical Issue"
     And I should see "Submitter"
     And I should see "Viewer Name"
     And I should see "Agent"
+=======
+    And I should see "Technical Issue"
+    And I should see "Submitter"
+    And I should see "Viewer Name"
+>>>>>>> d7f7a33e94ac097e6f0d21e753bd97743e7d1fa6
     And I should see "Unassigned"
     And I should see "Discussion"
     And I should see "No comments yet."
@@ -33,4 +39,9 @@ Feature: View ticket details
     And I am on the ticket page for "Billing discrepancy"
     Then I should see "Billing discrepancy"
     And I should see "Resolved"
+<<<<<<< HEAD
     And I should see "Resolved"
+=======
+    And I should see "Priority"
+    And I should see "High"
+>>>>>>> d7f7a33e94ac097e6f0d21e753bd97743e7d1fa6

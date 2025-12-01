@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   resources :tickets do
     collection do
       get :mine
+      get :board
     end
     member do
       patch :assign
@@ -15,6 +16,19 @@ Rails.application.routes.draw do
     end
     resources :comments, only: :create
   end
+  # Dashboard routes
+  # /dashboard as the Kanban-style board (tickets#board)
+  get "/dashboard", to: "tickets#board", as: :dashboard
+
+  # Summary (metrics) route for personal metrics
+  get "/summary", to: "metrics#user_metrics", as: :summary
+
+  # Admin metrics dashboard
+  get "/metrics/admin", to: "metrics#admin_dashboard", as: :admin_dashboard
+
+  # Personal dashboard route
+  get "/personal_dashboard", to: "tickets#dashboard", as: :personal_dashboard
+
   resources :teams do
     resources :team_memberships, only: [ :create, :destroy ]
   end
@@ -23,7 +37,6 @@ Rails.application.routes.draw do
   match  "/auth/:provider/callback", to: "sessions#create", via: [ :get, :post ]
   get    "/auth/failure", to: "sessions#failure"
 
-  # Dev-only quick-login helpers (choose who you want to be)
   if Rails.env.development? || Rails.env.test?
     get "/dev_login/:uid",       to: "dev_login#by_uid", constraints: { uid: /[A-Za-z0-9_\-]+/ }, format: false
   end
