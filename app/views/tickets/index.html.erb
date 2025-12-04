@@ -100,6 +100,13 @@
             <% end %>
             
             <span class="status-badge" style="background:#f0f4f8; color:#0e7afe;"><%= ticket.category %></span>
+            <div class="sidebar-card">
+          <% if ticket.customer_service_rated? %>
+            <span class="status-badge" title="Customer service rating">
+              <%= render_star_rating(ticket.customer_service_rating) %>
+            </span>
+          <% end %>
+        
           </div>
 
           <h2 class="ticket-card__title mt-2">

@@ -32,7 +32,9 @@ class Ticket < ApplicationRecord
 
   belongs_to :team, optional: true
 
-
+  validates :customer_service_rating,
+            inclusion: { in: 1..5, message: "must be between 1 and 5" },
+            allow_nil: true
 
 
   private
@@ -59,6 +61,18 @@ class Ticket < ApplicationRecord
   end
 
   public
+
+  # Can this user rate this ticket right now?
+  def ratable_by?(user)
+    user.present? &&
+      user == requester &&
+      resolved? &&
+      customer_service_rating.nil?
+  end
+
+  def customer_service_rated?
+    customer_service_rating.present?
+  end
 
   def approve!(user)
     self.approval_status = :approved

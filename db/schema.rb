@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_12_04_024159) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_04_195825) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -91,6 +91,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_12_04_024159) do
     t.integer "approver_id"
     t.datetime "approved_at"
     t.integer "team_id"
+    t.integer "customer_service_rating"
+    t.text "customer_service_feedback"
+    t.datetime "customer_service_rated_at"
     t.index ["approver_id"], name: "index_tickets_on_approver_id"
     t.index ["assignee_id"], name: "index_tickets_on_assignee_id"
     t.index ["requester_id"], name: "index_tickets_on_requester_id"

@@ -151,6 +151,83 @@
            </div>
          </div>
       <% end %>
+      
+      <div class="sidebar-card">
+        <span class="sidebar-heading">Customer Feedback</span>
+
+        <% if @ticket.customer_service_rated? %>
+          <div class="sidebar-data-row">
+            <span class="sidebar-label">Rating</span>
+            <span class="sidebar-value">
+              <span aria-label="<%= @ticket.customer_service_rating %> out of 5 stars">
+                <%= render_star_rating(@ticket.customer_service_rating) %>
+              </span>
+            </span>
+          </div>
+
+          <% if @ticket.customer_service_feedback.present? %>
+            <div class="sidebar-data-row" style="margin-top:0.5rem;">
+              <span class="sidebar-label">Feedback</span>
+              <p class="sidebar-value" style="white-space:pre-line;">
+                <%= @ticket.customer_service_feedback %>
+              </p>
+            </div>
+          <% end %>
+
+          <% if @ticket.customer_service_rated_at.present? %>
+            <div class="sidebar-data-row">
+              <span class="sidebar-label">Rated At</span>
+              <span class="sidebar-value">
+                <%= @ticket.customer_service_rated_at.strftime("%b %d, %Y %l:%M %p") %>
+              </span>
+            </div>
+          <% end %>
+
+        <% elsif current_user && @ticket.ratable_by?(current_user) %>
+          <p style="font-size:0.85rem; color:#555;">
+            How was the customer service you received on this ticket?
+          </p>
+
+          <%= form_with(model: @ticket, url: rate_ticket_path(@ticket), method: :patch, local: true) do |form| %>
+            <div class="sidebar-data-row" style="margin-bottom:0.5rem;">
+              <span class="sidebar-label">Rating</span>
+              <div class="sidebar-value">
+                <div class="star-rating">
+                  <% 1.upto(5) do |star| %>
+                    <%= form.radio_button :customer_service_rating,
+                                          star,
+                                          id: "ticket_rating_#{star}",
+                                          class: "star-rating-input" %>
+                    <label for="ticket_rating_#{star}" class="star-rating-star">★</label>
+                  <% end %>
+                </div>
+                <small style="display:block; color:#777; margin-top:0.3rem;">
+                  1 = Very poor, 5 = Excellent
+                </small>
+              </div>
+            </div>
+
+            <div class="sidebar-data-row" style="margin-bottom:0.5rem;">
+              <span class="sidebar-label">Comments (optional)</span>
+              <div class="sidebar-value">
+                <%= form.text_area :customer_service_feedback,
+                      rows: 3,
+                      style: "width:100%; box-sizing:border-box; font-size:0.85rem;" %>
+              </div>
+            </div>
+
+            <%= form.submit "Submit Feedback", class: "btn btn-sm btn-primary", style: "width:100%;" %>
+          <% end %>
+        <% else %>
+          <p style="font-size:0.85rem; color:#777;">
+            <% if current_user && current_user == @ticket.requester && !@ticket.resolved? %>
+              You can rate this ticket after it has been resolved.
+            <% else %>
+              No customer feedback has been submitted yet.
+            <% end %>
+          </p>
+        <% end %>
+      </div>
 
       <div class="sidebar-card">
         <span class="sidebar-heading">Activity Log</span>

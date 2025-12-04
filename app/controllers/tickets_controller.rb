@@ -1,6 +1,6 @@
 class TicketsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_ticket, only: %i[show edit update destroy assign close approve reject]
+  before_action :set_ticket, only: %i[show edit update destroy assign close approve reject rate]
 
   def index
     @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team)
@@ -232,6 +232,30 @@ class TicketsController < ApplicationController
     end
   end
 
+  def rate
+    authorize @ticket if respond_to?(:policy) # Pundit; or use a specific policy method if you have one
+
+    unless @ticket.resolved?
+      redirect_to @ticket, alert: "You can only rate resolved tickets." and return
+    end
+
+    unless current_user == @ticket.requester
+      redirect_to @ticket, alert: "Only the ticket requester can rate this ticket." and return
+    end
+
+    rating_params = params.require(:ticket).permit(:customer_service_rating, :customer_service_feedback)
+
+    # Ensure integer and within 1..5 at controller level as well (defensive)
+    if rating_params[:customer_service_rating].present?
+      rating_params[:customer_service_rating] = rating_params[:customer_service_rating].to_i
+    end
+
+    if @ticket.update(rating_params.merge(customer_service_rated_at: Time.current))
+      redirect_to @ticket, notice: "Thanks for your feedback!"
+    else
+      redirect_to @ticket, alert: @ticket.errors.full_messages.to_sentence
+    end
+  end
   private
 
   def apply_filters!

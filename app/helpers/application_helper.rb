@@ -19,4 +19,12 @@ module ApplicationHelper
 
     markdown.render(text).html_safe
   end
+  def render_star_rating(value, max: 5)
+    return "Not rated" if value.blank?
+
+    value = value.to_i
+    filled = "★" * value
+    empty  = "☆" * (max - value)
+    "#{filled}#{empty}"
+  end
 end
