@@ -20,14 +20,15 @@ class TicketPolicy < ApplicationPolicy
   end
 
   def permitted_attributes
-    attrs = %i[subject description priority category]
+    attrs = [ :subject, :description, :priority, :category, { attachments: [] } ]
+
     attrs << :status if change_status?
     attrs << :assignee_id if user.admin? || user.agent?
     attrs << :team_id     if user.admin? || user.agent?
+
     if user.admin? || user.agent?
       attrs << :approval_status
       attrs << :approval_reason
-      attrs << { attachments: [] }
     end
     attrs
   end

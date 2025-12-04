@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       patch :assign
       patch :approve
       patch :reject
+      patch :rate
       patch :close
     end
     resources :comments, only: :create

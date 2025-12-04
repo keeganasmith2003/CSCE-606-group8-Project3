@@ -18,7 +18,7 @@ Feature: Assign Ticket (with teams)
     When I visit the ticket page
     And I select "Support" from the team dropdown
     And I select "Bob" from the agent dropdown
-    And I press "Assign" within the assignment form
+    And I press "Update Assignment" within the assignment form
     Then I should see one of:
       | Ticket assigned to Bob     |
       | Ticket assignment updated. |
@@ -32,7 +32,7 @@ Feature: Assign Ticket (with teams)
     When I visit the ticket page
     And I select "Support" from the team dropdown
     And I leave the agent dropdown unassigned
-    And I press "Assign" within the assignment form
+    And I press "Update Assignment" within the assignment form
     Then I should see "Ticket assignment updated."
     And the ticket's team should be "Support"
 

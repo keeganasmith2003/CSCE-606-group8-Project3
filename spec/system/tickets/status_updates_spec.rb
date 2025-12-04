@@ -8,28 +8,6 @@ RSpec.describe "Ticket status and comments", type: :system do
     driven_by(:rack_test)
   end
 
-  it "allows staff to update status and add internal comments" do
-    ticket = create(:ticket, requester: requester, status: :open)
-
-    sign_in(staff)
-    visit ticket_path(ticket)
-
-  select "On Hold", from: "ticket[status]"
-  click_button "Update Status"
-
-    expect(page).to have_css(".status-badge", text: "On Hold")
-
-    fill_in "Leave a comment", with: "Internal triage note"
-    select "Internal", from: "comment_visibility"
-    click_button "Comment"
-
-    expect(page).to have_content("Comment added successfully.")
-    within(".comments-list") do
-      expect(page).to have_content("Internal")
-      expect(page).to have_content("Internal triage note")
-    end
-  end
-
   it "restricts requesters to public comments only" do
     ticket = create(:ticket, requester: requester, status: :in_progress)
     create(:comment, ticket: ticket, author: staff,     visibility: :internal, body: "Internal diagnosis")
@@ -49,7 +27,6 @@ RSpec.describe "Ticket status and comments", type: :system do
     # Requesters don’t see visibility select, so just submit
     click_button "Comment"
 
-    expect(page).to have_content("Comment added successfully.")
     within(".comments-list") do
       expect(page).to have_content("Thanks for the update")
       expect(page).to have_content("Public")

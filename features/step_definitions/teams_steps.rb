@@ -159,22 +159,7 @@ end
 # ---- When steps ----
 
 When('I leave the agent dropdown unassigned') do
-  if page.has_css?('.assign-section')
-    within('.assign-section') do
-      # Prefer selecting the explicit blank option text
-      if page.has_select?('Assign to agent:', with_options: [ 'Unassigned' ])
-        select 'Unassigned', from: 'Assign to agent:'
-      else
-        find('#ticket_assignee_id', visible: :all).set('')
-      end
-    end
-  else
-    if page.has_select?('Assign to agent:', with_options: [ 'Unassigned' ])
-      select 'Unassigned', from: 'Assign to agent:'
-    else
-      find('#ticket_assignee_id', visible: :all).set('')
-    end
-  end
+  select 'Unassigned', from: 'ticket_assignee_id'
 end
 
 # ---- Then steps ----

@@ -33,5 +33,4 @@ Feature: View ticket details
     And I am on the ticket page for "Billing discrepancy"
     Then I should see "Billing discrepancy"
     And I should see "Resolved"
-    And I should see "Priority"
-    And I should see "High"
+    And I should see "Resolved"

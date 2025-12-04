@@ -31,8 +31,13 @@
     </div>
 
     <div class="form-field form-field--wide">
-      <%= form.label :description %>
-      <%= form.text_area :description, rows: 8 %>
+      <%= form.label :description, "Description (Supports Markdown: **bold**, *italics*, - lists)" %>
+      <%= form.text_area :description, rows: 8, placeholder: "Describe the issue... Use **text** for bold, - for lists." %>
+    </div>
+
+    <div class="form-field form-field--wide">
+      <%= form.label :attachments, "Attach Evidence (Screenshots/Logs)" %>
+      <%= form.file_field :attachments, multiple: true, class: "form-input", style: "padding: 0.4rem;" %>
     </div>
 
     <% if respond_to?(:current_user) && (current_user&.agent? || current_user&.admin?) %>
@@ -43,36 +48,31 @@
         <%= form.select :approval_status, Ticket.approval_statuses.keys.map { |k| [k.titleize, k] }, {}, { class: "form-select" } %>
       </div>
 
-      <div class="form-field">
-        <%= form.label :attachments, "Upload New Files" %>
-        <%= form.file_field :attachments, multiple: true, style: "padding: 0.4rem;" %>
-      </div>
-
       <div class="form-field form-field--wide">
         <%= form.label :approval_reason, "Rejection Reason (if rejecting)" %>
         <%= form.text_area :approval_reason, rows: 2, placeholder: "Enter reason..." %>
       </div>
+    <% end %>
 
-      <% if @ticket.attachments.attached? %>
-        <div class="form-field form-field--wide">
-          <label style="display:block; margin-bottom:0.5rem;">Manage Existing Attachments</label>
-          <div class="attachment-manage-list">
-            <% @ticket.attachments.each do |att| %>
-              <div class="attachment-manage-item">
-                <div class="attachment-manage-left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                  <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener", style: "text-decoration:none; color:#0366d6;" %>
-                  <span style="color:#6a737d; font-size:0.85em;">(<%= number_to_human_size(att.byte_size) %>)</span>
-                </div>
-                <label class="attachment-remove-label">
-                  <input type="checkbox" name="ticket[remove_attachment_ids][]" value="<%= att.id %>" />
-                  <span>Remove</span>
-                </label>
+    <% if @ticket.attachments.attached? %>
+      <div class="form-field form-field--wide">
+        <label style="display:block; margin-bottom:0.5rem;">Manage Existing Attachments</label>
+        <div class="attachment-manage-list">
+          <% @ticket.attachments.each do |att| %>
+            <div class="attachment-manage-item">
+              <div class="attachment-manage-left">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                <%= link_to att.filename.to_s, url_for(att), target: "_blank", rel: "noopener", style: "text-decoration:none; color:#0366d6;" %>
+                <span style="color:#6a737d; font-size:0.85em;">(<%= number_to_human_size(att.byte_size) %>)</span>
               </div>
-            <% end %>
-          </div>
+              <label class="attachment-remove-label">
+                <input type="checkbox" name="ticket[remove_attachment_ids][]" value="<%= att.id %>" />
+                <span>Remove</span>
+              </label>
+            </div>
+          <% end %>
         </div>
-      <% end %>
+      </div>
     <% end %>
   </div>
 
