@@ -1,31 +1,24 @@
 class TicketsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_ticket, only: %i[show edit update destroy assign close approve reject]
+  before_action :set_ticket, only: %i[show edit update destroy assign close approve reject rate]
 
   def index
     @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team)
-
     apply_filters!
-
     load_filter_options
   end
 
   def mine
     authorize Ticket, :index?
-
     team_ids = current_user.teams.select(:id)
 
     @tickets = policy_scope(Ticket)
                  .where(assignee_id: current_user.id)
-                 .or(
-                   policy_scope(Ticket).where(team_id: team_ids)
-                 )
+                 .or(policy_scope(Ticket).where(team_id: team_ids))
                  .includes(:requester, :assignee, :team)
 
     apply_filters!
-
     load_filter_options
-
     render :index
   end
 
@@ -43,7 +36,7 @@ class TicketsController < ApplicationController
   end
 
   def new
-    @ticket = Ticket.new(status: "open") # default status
+    @ticket = Ticket.new(status: "open")
     authorize @ticket
   end
 
@@ -52,6 +45,8 @@ class TicketsController < ApplicationController
     authorize @ticket
     @ticket.assign_attributes(ticket_params)
     @ticket.requester = current_user
+
+    assign_team_based_on_category
 
     if Setting.auto_round_robin?
       @ticket.assignee = next_agent_in_rotation
@@ -70,22 +65,22 @@ class TicketsController < ApplicationController
 
   def update
     authorize @ticket
-    # Allow staff/admin to remove attachments (handled before attribute update)
-    if (current_user&.agent? || current_user&.admin?) && params.dig(:ticket, :remove_attachment_ids).present?
+
+    if params.dig(:ticket, :remove_attachment_ids).present?
       ids = Array(params.dig(:ticket, :remove_attachment_ids)).map(&:to_i)
       @ticket.attachments.each do |att|
         att.purge if ids.include?(att.id)
       end
     end
 
-    # Attach any uploaded files explicitly (some test drivers may not trigger attach via update)
-    if (current_user&.agent? || current_user&.admin?) && params.dig(:ticket, :attachments).present?
+    if params.dig(:ticket, :attachments).present?
       Array(params.dig(:ticket, :attachments)).each do |uploaded|
         @ticket.attachments.attach(uploaded)
       end
     end
 
-    # If current user is staff/admin and approval params are present, handle approval flow
+    @ticket.assign_attributes(ticket_params)
+
     if (current_user&.agent? || current_user&.admin?) && params.dig(:ticket, :approval_status).present?
       approval_param = params.dig(:ticket, :approval_status).to_s
       case approval_param
@@ -93,7 +88,6 @@ class TicketsController < ApplicationController
         begin
           @ticket.approve!(current_user)
           TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not approve ticket: #{e.message}")
@@ -102,34 +96,26 @@ class TicketsController < ApplicationController
       when "rejected"
         reason = params.dig(:ticket, :approval_reason)
         if reason.blank?
-          # Provide a clearer, user-friendly message when staff attempt to reject without a reason
           @ticket.errors.add(:base, "Reject reason cannot be blank")
           render :edit, status: :unprocessable_content and return
         end
         begin
           @ticket.reject!(current_user, reason)
-          # 2. Send email on Rejection
           TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-
           redirect_to @ticket, notice: "Ticket was successfully updated." and return
         rescue => e
           @ticket.errors.add(:base, "Could not reject ticket: #{e.message}")
           render :edit, status: :unprocessable_content and return
         end
       when "pending"
-        # reset approval fields
         @ticket.update(approval_status: :pending, approver: nil, approval_reason: nil, approved_at: nil)
-        # 3. Send email on Reset to Pending
         TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-
         redirect_to @ticket, notice: "Ticket was successfully updated." and return
       end
     end
 
     if @ticket.update(ticket_params)
-      # 4. Send email on Standard Update
       TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
-
       redirect_to @ticket, notice: "Ticket was successfully updated."
     else
       render :edit, status: :unprocessable_content
@@ -144,7 +130,6 @@ class TicketsController < ApplicationController
 
   def close
     authorize @ticket, :close?
-
     if @ticket.update(status: :resolved)
       TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to @ticket, notice: "Ticket resolved successfully."
@@ -183,40 +168,29 @@ class TicketsController < ApplicationController
 
   def assign
     authorize @ticket, :assign?
-
-    # Raw params
     ticket_params_raw = params[:ticket] || {}
     team_param     = ticket_params_raw[:team_id]
     assignee_param = ticket_params_raw[:assignee_id]
 
     updates = {}
-
-    # Apply team if the key is present (even when blank)
     if ticket_params_raw.key?(:team_id)
-      updates[:team_id] = team_param.presence # "" -> nil
+      updates[:team_id] = team_param.presence
     end
 
-    # Apply assignee if the key is present (even when blank)
-    # When assignee_param is "" (from blank select option), convert to nil
     if ticket_params_raw.key?(:assignee_id)
       assignee_param = assignee_param.to_s.strip
-      updates[:assignee_id] = assignee_param.presence # "" -> nil, "123" -> "123"
+      updates[:assignee_id] = assignee_param.presence
     end
 
-    # If team is changing, ensure assignee is cleared when appropriate to avoid validation
     if updates.key?(:team_id) && updates[:team_id].present?
       new_team = Team.find(updates[:team_id])
-
       if ticket_params_raw.key?(:assignee_id)
-        # If an assignee id was provided but the assignee doesn't belong to the new team, clear it.
         if updates[:assignee_id].present?
           updates[:assignee_id] = nil unless new_team.members.exists?(id: updates[:assignee_id])
         else
-          # Explicit blank was provided -> ensure nil
           updates[:assignee_id] = nil
         end
       else
-        # No assignee param provided: if current assignee doesn't belong to the new team, clear it.
         if @ticket.assignee_id.present? && !new_team.members.exists?(id: @ticket.assignee_id)
           updates[:assignee_id] = nil
         end
@@ -227,28 +201,20 @@ class TicketsController < ApplicationController
       TicketMailer.with(ticket: @ticket).ticket_updated_email.deliver_later
       redirect_to @ticket, notice: "Ticket assignment updated."
     else
-      # Show why it failed (e.g., "Assignee must belong to the selected team")
       message = @ticket.errors.full_messages.to_sentence.presence || "No assignment changes provided."
       redirect_to @ticket, alert: message
     end
   end
 
-  # Kanban-style board view: group visible tickets by status for UI columns
   def board
     @tickets = policy_scope(Ticket).includes(:requester, :assignee, :team).order(:priority, :created_at)
-    # Ensure all statuses have keys
     @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
       h[s] = @tickets.select { |t| t.status == s }
     end
   end
 
-  # Personal dashboard: summary of tickets assigned to current_user grouped by status
   def dashboard
     authorize Ticket, :index?
-
-    # Show tickets assigned to the current user _or_ assigned to any of the user's teams.
-    # Use direct Ticket queries (not policy_scope) because policy_scope for regular users
-    # restricts to requester-only, which would hide assigned tickets.
     team_ids = current_user.teams.select(:id)
     @tickets = Ticket.where(assignee_id: current_user.id)
                      .or(Ticket.where(team_id: team_ids))
@@ -257,89 +223,133 @@ class TicketsController < ApplicationController
 
     @open_tickets = @tickets.where(status: :open)
     @open_tickets_count = @open_tickets.count
-
-    # 5 most recently updated tickets
     @recent_tickets = @tickets.limit(5)
-
-    # counts per status
     @counts_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
       h[s] = @tickets.select { |t| t.status == s }.size
     end
-
-    # provide a quick list for each status (limit 5)
     @tickets_by_status = Ticket.statuses.keys.each_with_object({}) do |s, h|
       h[s] = @tickets.select { |t| t.status == s }.first(5)
     end
   end
 
+  def rate
+    authorize @ticket if respond_to?(:policy) # Pundit; or use a specific policy method if you have one
 
+    unless @ticket.resolved?
+      redirect_to @ticket, alert: "You can only rate resolved tickets." and return
+    end
+
+    unless current_user == @ticket.requester
+      redirect_to @ticket, alert: "Only the ticket requester can rate this ticket." and return
+    end
+
+    rating_params = params.require(:ticket).permit(:customer_service_rating, :customer_service_feedback)
+
+    # Ensure integer and within 1..5 at controller level as well (defensive)
+    if rating_params[:customer_service_rating].present?
+      rating_params[:customer_service_rating] = rating_params[:customer_service_rating].to_i
+    end
+
+    if @ticket.update(rating_params.merge(customer_service_rated_at: Time.current))
+      redirect_to @ticket, notice: "Thanks for your feedback!"
+    else
+      redirect_to @ticket, alert: @ticket.errors.full_messages.to_sentence
+    end
+  end
+
+  def bulk_actions
+    authorize Ticket, :bulk_actions?
+
+    ids = Array(params[:ticket_ids]).map(&:to_i).uniq
+    if ids.empty?
+      redirect_back fallback_location: tickets_path, alert: "No tickets selected." and return
+    end
+
+    bulk_action = params[:bulk_action].to_s
+    tickets = policy_scope(Ticket).where(id: ids)
+
+    case bulk_action
+    when "close"
+      bulk_close_tickets(tickets)
+    when "delete"
+      bulk_delete_tickets(tickets)
+    else
+      redirect_back fallback_location: tickets_path, alert: "No bulk action selected." and return
+    end
+  end
   private
+
+  def bulk_close_tickets(tickets)
+    count = 0
+
+    Ticket.transaction do
+      tickets.each do |ticket|
+        # reuse same semantics as your `close` action
+        if ticket.update(status: :resolved)
+          TicketMailer.with(ticket: ticket).ticket_updated_email.deliver_later
+          count += 1
+        end
+      end
+    end
+
+    redirect_back fallback_location: tickets_path, notice: "#{count} ticket(s) resolved."
+  rescue => e
+    redirect_back fallback_location: tickets_path, alert: "Could not bulk resolve tickets: #{e.message}"
+  end
+
+  def bulk_delete_tickets(tickets)
+    count = 0
+
+    Ticket.transaction do
+      tickets.each do |ticket|
+        ticket.destroy!
+        count += 1
+      end
+    end
+
+    redirect_back fallback_location: tickets_path, notice: "#{count} ticket(s) deleted."
+  rescue => e
+    redirect_back fallback_location: tickets_path, alert: "Could not bulk delete tickets: #{e.message}"
+  end
+
+  # ... rest of your private methods
+
   def apply_filters!
-    # status: integer enum
     @tickets = @tickets.where(status: params[:status]) if params[:status].present?
-
-    # category: string
     @tickets = @tickets.where(category: params[:category]) if params[:category].present?
-
-    # assignee
     @tickets = @tickets.where(assignee_id: params[:assignee_id]) if params[:assignee_id].present?
-
-    # approval_status: integer enum
     @tickets = @tickets.where(approval_status: params[:approval_status]) if params[:approval_status].present?
 
-    # free-text search on subject + description
     if params[:q].present?
       q = "%#{params[:q]}%"
       adapter = ActiveRecord::Base.connection.adapter_name.downcase.to_sym
-
       if adapter == :postgresql
-        # Case-insensitive search in Postgres
-        @tickets = @tickets.where(
-          "tickets.subject ILIKE :q OR tickets.description ILIKE :q",
-          q: q
-        )
+        @tickets = @tickets.where("tickets.subject ILIKE :q OR tickets.description ILIKE :q", q: q)
       else
-        @tickets = @tickets.where(
-          "LOWER(tickets.subject) LIKE :q OR LOWER(tickets.description) LIKE :q",
-          q: q.downcase
-        )
+        @tickets = @tickets.where("LOWER(tickets.subject) LIKE :q OR LOWER(tickets.description) LIKE :q", q: q.downcase)
       end
     end
     apply_sort!
   end
 
   def apply_sort!
-    # One param that encodes both field + direction to keep the UI simple
     sort_param = params[:sort].presence || "created_at_desc"
-
-    @tickets =
-      case sort_param
-      when "created_at_asc"
-        @tickets.order(created_at: :asc)
-      when "created_at_desc"
-        @tickets.order(created_at: :desc)
-      when "priority_asc"
-        # low → high; tie-break by newest first
-        @tickets.order(priority: :asc, created_at: :desc)
-      when "priority_desc"
-        # high → low; tie-break by newest first
-        @tickets.order(priority: :desc, created_at: :desc)
-      when "status_asc"
-        # enum order: open, in_progress, on_hold, resolved
-        @tickets.order(status: :asc, created_at: :desc)
-      when "status_desc"
-        @tickets.order(status: :desc, created_at: :desc)
-      else
-        # Safe default
-        @tickets.order(created_at: :desc)
-      end
+    @tickets = case sort_param
+    when "created_at_asc" then @tickets.order(created_at: :asc)
+    when "created_at_desc" then @tickets.order(created_at: :desc)
+    when "priority_asc" then @tickets.order(priority: :asc, created_at: :desc)
+    when "priority_desc" then @tickets.order(priority: :desc, created_at: :desc)
+    when "status_asc" then @tickets.order(status: :asc, created_at: :desc)
+    when "status_desc" then @tickets.order(status: :desc, created_at: :desc)
+    else @tickets.order(created_at: :desc)
+    end
   end
 
   def load_filter_options
-    @status_options         = Ticket.statuses.keys
+    @status_options = Ticket.statuses.keys
     @approval_status_options = Ticket.approval_statuses.keys
-    @category_options       = Ticket.where.not(category: [ nil, "" ]).distinct.order(:category).pluck(:category)
-    @assignee_options       = User.where(id: @tickets.where.not(assignee_id: nil).select(:assignee_id).distinct)
+    @category_options = Ticket.where.not(category: [ nil, "" ]).distinct.order(:category).pluck(:category)
+    @assignee_options = User.where(id: @tickets.where.not(assignee_id: nil).select(:assignee_id).distinct)
   end
 
   def set_ticket
@@ -347,21 +357,45 @@ class TicketsController < ApplicationController
   end
 
   def ticket_params
+    # NOTE: Ensure your TicketPolicy#permitted_attributes includes :attachments for regular users!
     permitted = policy(@ticket).permitted_attributes
     params.require(:ticket).permit(permitted)
   end
 
   def next_agent_in_rotation
-    agents = User.where(role: :staff).order(:id)
-    return agents.first if agents.empty?
+    scope = User.where(role: :staff)
+    scope = scope.joins(:teams).where(teams: { id: @ticket.team_id }) if @ticket.team_id.present?
 
-    last_assigned_index = Setting.get("last_assigned_index")
+    agents = scope.order(:id)
+    return nil if agents.empty?
+
+    last_assigned_index = Setting.get("last_assigned_index_#{@ticket.team_id || 'all'}")
+
     if last_assigned_index.nil?
       index = 0
     else
       index = (last_assigned_index.to_i + 1) % agents.size
     end
-    Setting.set("last_assigned_index", index.to_s)
+
+    Setting.set("last_assigned_index_#{@ticket.team_id || 'all'}", index.to_s)
     agents[index]
+  end
+
+  def assign_team_based_on_category
+    # Define the mapping based on your specific team names
+    target_team_name = case @ticket.category
+    when "Account Access", "Technical Issue"
+                         "Support"
+    when "Feature Request"
+                         "Ops"
+    else
+                         nil # No default assignment for unknown categories
+    end
+
+    if target_team_name.present?
+      # Find the team by name (using case-insensitive search to be safe)
+      team = Team.where("LOWER(name) = ?", target_team_name.downcase).first
+      @ticket.team = team if team
+    end
   end
 end

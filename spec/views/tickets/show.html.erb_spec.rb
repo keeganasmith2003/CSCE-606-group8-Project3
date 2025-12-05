@@ -26,6 +26,11 @@ RSpec.describe "tickets/show", type: :view do
     allow(ticket_policy).to receive(:change_status?).and_return(false)
     allow(ticket_policy).to receive(:assign?).and_return(false)
     allow(ticket_policy).to receive(:destroy?).and_return(false)
+    current = requester
+    view.singleton_class.send(:define_method, :current_user) do
+      current
+    end
+
     view.singleton_class.send(:define_method, :policy) do |record|
       case record
       when Ticket

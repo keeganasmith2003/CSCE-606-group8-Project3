@@ -23,15 +23,39 @@
 
   <div class="dashboard-summary">
     <h2>Tickets by Status</h2>
-    <% Ticket.statuses.keys.each do |status| %>
-      <div class="dashboard-status">
-        <h3><%= status.titleize %> (<%= @counts_by_status[status] || 0 %>)</h3>
-        <div class="dashboard-ticket-list">
-          <% (@tickets_by_status[status] || []).each do |ticket| %>
-            <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
-          <% end %>
+    <% if policy(Ticket).bulk_actions? %>
+      <%= form_with url: bulk_actions_tickets_path, method: :post, local: true, class: "bulk-actions-form" do %>
+        <div class="bulk-actions-toolbar">
+          <label for="bulk_action">Bulk action:</label>
+          <%= select_tag :bulk_action,
+                options_for_select([["Close selected", "close"], ["Delete selected", "delete"]]),
+                include_blank: "Choose…" %>
+          <%= submit_tag "Apply", class: "btn btn-danger", data: { confirm: "Are you sure? This cannot be undone." } %>
         </div>
-      </div>
+
+        <% Ticket.statuses.keys.each do |status| %>
+          <div class="dashboard-status">
+            <h3><%= status.titleize %> (<%= @counts_by_status[status] || 0 %>)</h3>
+            <div class="dashboard-ticket-list">
+              <% (@tickets_by_status[status] || []).each do |ticket| %>
+                <%= render partial: 'ticket_card',
+                           locals: { ticket: ticket, bulk_select: true } %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    <% else %>
+      <% Ticket.statuses.keys.each do |status| %>
+        <div class="dashboard-status">
+          <h3><%= status.titleize %> (<%= @counts_by_status[status] || 0 %>)</h3>
+          <div class="dashboard-ticket-list">
+            <% (@tickets_by_status[status] || []).each do |ticket| %>
+              <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     <% end %>
   </div>
 </div>

@@ -1,16 +1,42 @@
 <div class="container tickets-board-page">
   <h1>Tickets Board</h1>
 
-  <div class="kanban-board">
-    <% Ticket.statuses.keys.each do |status| %>
-      <div class="kanban-column">
-        <div class="kanban-column-header"><%= status.titleize %></div>
-        <div class="kanban-column-body">
-          <% @tickets_by_status[status].each do |ticket| %>
-            <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
-          <% end %>
-        </div>
+  <% if policy(Ticket).bulk_actions? %>
+    <%= form_with url: bulk_actions_tickets_path, method: :post, local: true do %>
+      <div class="bulk-actions-toolbar">
+        <label for="bulk_action">Bulk action:</label>
+        <%= select_tag :bulk_action,
+              options_for_select([["Close selected", "close"], ["Delete selected", "delete"]]),
+              include_blank: "Choose…" %>
+        <%= submit_tag "Apply", class: "btn btn-danger", data: { confirm: "Are you sure? This cannot be undone." } %>
+      </div>
+
+      <div class="kanban-board">
+        <% Ticket.statuses.keys.each do |status| %>
+          <div class="kanban-column">
+            <div class="kanban-column-header"><%= status.titleize %></div>
+            <div class="kanban-column-body">
+              <% @tickets_by_status[status].each do |ticket| %>
+                <%= render partial: 'ticket_card',
+                           locals: { ticket: ticket, bulk_select: true } %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     <% end %>
-  </div>
+  <% else %>
+    <div class="kanban-board">
+      <% Ticket.statuses.keys.each do |status| %>
+        <div class="kanban-column">
+          <div class="kanban-column-header"><%= status.titleize %></div>
+          <div class="kanban-column-body">
+            <% @tickets_by_status[status].each do |ticket| %>
+              <%= render partial: 'ticket_card', locals: { ticket: ticket } %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>

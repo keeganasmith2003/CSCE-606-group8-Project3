@@ -1,9 +1,16 @@
+<% bulk_select = local_assigns.fetch(:bulk_select, false) %>
+
 <div class="ticket-card">
   <h4 class="ticket-subject"><%= link_to ticket.subject, ticket_path(ticket) %></h4>
   <div class="ticket-meta">
     <span class="ticket-priority"><%= ticket.priority.titleize %></span>
     <% if ticket.assignee %>
       <span class="ticket-assignee">Assigned: <%= ticket.assignee.name || ticket.assignee.email %></span>
+    <% end %>
+    <% if bulk_select %>
+      <div class="ticket-bulk-checkbox">
+        <%= check_box_tag "ticket_ids[]", ticket.id, false, class: "ticket-bulk-checkbox-input" %>
+      </div>
     <% end %>
   </div>
 </div>

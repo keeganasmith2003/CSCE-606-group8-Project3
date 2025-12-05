@@ -3,6 +3,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
   include Pundit::Authorization
   helper_method :current_user
+  before_action :set_paper_trail_whodunnit
 
   unless Rails.env.test?
     rescue_from Pundit::NotAuthorizedError do

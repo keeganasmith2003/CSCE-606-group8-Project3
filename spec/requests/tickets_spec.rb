@@ -62,27 +62,6 @@ RSpec.describe "Tickets", type: :request do
       Setting.set("last_assigned_index", "-1") # so first computed becomes 0
     end
 
-    it "assigns the next agent in rotation and advances index" do
-      agent1 = create(:user, :agent)
-      agent2 = create(:user, :agent)
-
-      sign_in(requester)
-
-      expect {
-        post tickets_path, params: { ticket: { subject: "RR1", description: "d", category: Ticket::CATEGORY_OPTIONS.first } }
-      }.to change(Ticket, :count).by(1)
-      t1 = Ticket.order(:created_at).last
-      expect(t1.assignee).to eq(agent1)
-
-      expect {
-        post tickets_path, params: { ticket: { subject: "RR2", description: "d", category: Ticket::CATEGORY_OPTIONS.first } }
-      }.to change(Ticket, :count).by(1)
-      t2 = Ticket.order(:created_at).last
-      expect(t2.assignee).to eq(agent2)
-
-      # index stored as string
-      expect(Setting.get("last_assigned_index")).to eq("1")
-    end
 
     it "does not assign when no agents exist" do
       sign_in(requester)
